@@ -1,6 +1,3 @@
-console.log("scratchpad script loaded")
-
-//get snips by user, check for first if exists
 let snips = [];
 let socket = null;
 let snip = {};
@@ -45,7 +42,7 @@ fetch("/snips")
         console.dir(data);
         snips = data;
         loadExistingSnip(snips[0]);
-        connectSocket();
+        connectSocket(1);
         loadFlask();
         updateEditorContents(snip.title, snip.content);
     });
@@ -70,7 +67,7 @@ function updateEditorContents(title, content) {
     flask.updateCode(content);
 }
 
-function connectSocket() {
+function connectSocket(retryTimeout) {
     socket = new WebSocket("ws://" + window.location.host + "/socket/" + snip.id);
 
     socket.onerror = function(event) {
@@ -89,7 +86,18 @@ function connectSocket() {
     };
 
     socket.onclose = function(event) {
-        console.log("socket closed:"); //retry connect on timer?
+        var explanation = "";
+        if (event.reason && event.reason.length > 0) {
+            explanation = event.reason;
+        } else {
+            explanation = "Reason unknown";
+        }
+
+        console.log("socket closed:" + explanation);
         console.dir(event);
+        ohSnap("Connection closed! " + event.code + ": " + explanation, {color: 'red'});
+        ohSnap("Retrying in " + retryTimeout + " seconds", {color: 'yellow'});
+        let newTimeout = Math.min(10, retryTimeout + 2); //bump up retry timeout by 2 seconds, up to max of 10
+        setTimeout(connectSocket(newTimeout), retryTimeout * 1000);
     }
 }
