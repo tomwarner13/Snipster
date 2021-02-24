@@ -56,3 +56,8 @@ kotlin.sourceSets["test"].kotlin.srcDirs("test")
 
 sourceSets["main"].resources.srcDirs("resources")
 sourceSets["test"].resources.srcDirs("testresources")
+
+//for heroku
+tasks.create("stage") {
+    dependsOn("installDist")
+}
