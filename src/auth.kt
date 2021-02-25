@@ -14,9 +14,10 @@ import java.lang.Exception
 
 fun Application.setupAuth() {
     val oktaConfig = oktaConfigReader(ConfigFactory.load() ?: throw Exception("Failed to load okta config"))
+
     install(Authentication) {
         oauth {
-            urlProvider = { "http://localhost:8080/login/authorization-callback" } //do this work lol
+            urlProvider = { "${oktaConfig.host}/login/authorization-callback" } //NEED TO LOAD HOST FROM ENV CONFIG OR SOMETHING
             providerLookup = { oktaConfig.asOAuth2Config() }
             client = HttpClient()
         }
@@ -31,6 +32,8 @@ fun Application.setupAuth() {
         .setClientId(oktaConfig.clientId)
         .setIssuer(oktaConfig.orgUrl)
         .build()
+
+    val host = oktaConfig.host
 
     routing {
         authenticate {
@@ -80,7 +83,7 @@ fun Application.setupAuth() {
             val redirectLogout = when (idToken) {
                 null -> "/"
                 else -> URLBuilder(oktaConfig.logoutUrl).run {
-                    parameters.append("post_logout_redirect_uri", "http://localhost:8080")
+                    parameters.append("post_logout_redirect_uri", host)
                     parameters.append("id_token_hint", idToken)
                     buildString()
                 }

@@ -1,11 +1,10 @@
 package com.okta.demo.ktor.database
 
 import org.jetbrains.exposed.sql.*
-import java.sql.Connection
 
 //idea here is to just have a connection available for other classes to use
 class DatabaseConnection(private val settings: ConnectionSettings) {
     val db : Database by lazy {
-        Database.connect(settings.url, driver = settings.driver, user = settings.user, password = settings.password)
+        Database.connect(settings.url, driver = settings.driver)
     }
 }

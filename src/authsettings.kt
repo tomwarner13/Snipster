@@ -9,7 +9,8 @@ data class OktaConfig(
     val orgUrl: String,
     val clientId: String,
     val clientSecret: String,
-    val audience: String
+    val audience: String,
+    val host: String
 ) {
     val accessTokenUrl = "$orgUrl/v1/token"
     val authorizeUrl = "$orgUrl/v1/authorize"
@@ -31,5 +32,6 @@ fun oktaConfigReader(config: Config): OktaConfig = OktaConfig(
     orgUrl = config.getString("okta.orgUrl"),
     clientId = config.getString("okta.clientId"),
     clientSecret = config.getString("okta.clientSecret"),
-    audience = config.tryGetString("okta.audience") ?: "api://default"
+    audience = config.tryGetString("okta.audience") ?: "api://default",
+    host = config.getString("global.host"),
 )

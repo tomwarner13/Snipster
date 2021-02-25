@@ -79,9 +79,8 @@ fun setupDatabase() : DatabaseConnection {
     val config = ConfigFactory.load()
     val settings = ConnectionSettings(
         config.getString("database.url"),
-        config.getString("database.driver"),
-        config.getString("database.user"),
-        config.getString("database.password"))
+        config.getString("database.driver")
+    )
 
     return DatabaseConnection(settings)
 }

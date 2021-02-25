@@ -44,7 +44,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVersion")
-    implementation("mysql:mysql-connector-java:5.1.48")
+    implementation("org.postgresql:postgresql:42.2.2")
     implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:7.2.0")
     implementation("io.ktor:ktor-gson:$ktor_version")
     implementation("io.ktor:ktor-websockets:$ktor_version")
