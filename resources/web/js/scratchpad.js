@@ -68,7 +68,11 @@ function updateEditorContents(title, content) {
 }
 
 function connectSocket(retryTimeout) {
-    socket = new WebSocket("wss://" + window.location.host + "/socket/" + snip.id);
+    //websocket protocol has to be secure/insecure to match http* protocol
+    let wsProtocol = "wss://";
+    if(location.protocol === "http:") wsProtocol = "ws://";
+
+    socket = new WebSocket(wsProtocol + window.location.host + "/socket/" + snip.id);
 
     socket.onerror = function(event) {
         console.log("socket error:"); //TODO more
