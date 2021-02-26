@@ -68,7 +68,7 @@ function updateEditorContents(title, content) {
 }
 
 function connectSocket(retryTimeout) {
-    socket = new WebSocket("ws://" + window.location.host + "/socket/" + snip.id);
+    socket = new WebSocket("wss://" + window.location.host + "/socket/" + snip.id);
 
     socket.onerror = function(event) {
         console.log("socket error:"); //TODO more
