@@ -9,8 +9,9 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 
-class ScratchTemplate(private val currentUsername: String? = null) : Template<HTML> {
+class ScratchTemplate(private val username: String? = null, private val displayname: String? = null) : Template<HTML> {
     val content = Placeholder<HtmlBlockTag>()
+    val isLoggedIn = username !== null;
     override fun HTML.apply() {
         head {
             title { +"Snipster" }
@@ -22,6 +23,14 @@ class ScratchTemplate(private val currentUsername: String? = null) : Template<HT
                 attributes["crossorigin"] = "anonymous"
             }
             script(src = "/js/ohsnap.min.js") {}
+            script { //inject page-level variables
+                unsafe {
+                    raw("""
+                        let isLoggedIn = $isLoggedIn;
+                        let username = "$username";
+                    """)
+                }
+            }
             script(src = "/js/scratchpad.js") {}
             meta(name = "viewport", content = "width=device-width, initial-scale=1, shrink-to-fit=no")
             meta(charset = "utf-8")
@@ -35,9 +44,9 @@ class ScratchTemplate(private val currentUsername: String? = null) : Template<HT
                             +"📝 Snipster"
                         }
                         div("navbar-nav flex-row") {
-                            if (currentUsername != null) {
-                                a(href = "/${currentUsername}", classes = "nav-link mr-4") {
-                                    +"Hello, $currentUsername"
+                            if (isLoggedIn) {
+                                a(href = "/${username}", classes = "nav-link mr-4") { //TODO can this link to settings for the user? or just remove the <a>
+                                    +"Hello, $displayname"
                                 }
                                 a(href = "/logout", classes = "nav-link") {
                                     +"Logout"
@@ -74,7 +83,7 @@ class ScratchTemplate(private val currentUsername: String? = null) : Template<HT
     }
 }
 
-fun FlowContent.textEditor(document: String) {
+fun FlowContent.textEditor() {
     div {
         div { classes = setOf("codeflask", "col-lg-8", " col-xs-12", "border") }
     }

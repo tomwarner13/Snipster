@@ -27,10 +27,9 @@ fun Application.setupRoutes() = routing {
     }
 
     get("/") {
-        val username = call.parameters["username"]
-        call.respondHtmlTemplate(ScratchTemplate(call.session?.displayName)) {
+        call.respondHtmlTemplate(ScratchTemplate(call.session?.username, call.session?.displayName)) {
             content {
-                textEditor("welcome! edit me")
+                textEditor()
             }
         }
     }

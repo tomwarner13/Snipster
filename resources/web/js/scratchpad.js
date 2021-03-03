@@ -2,6 +2,8 @@ let snips = [];
 let socket = null;
 let snip = {};
 let flask = {};
+let socketIsConnected = false;
+let changesQueued = false;
 
 const debounce = (callback, wait) => {
   let timeoutId = null;
@@ -32,35 +34,30 @@ function onUpdate(data) {
     }
 }
 
-fetch("/snips")
-    .then(response => {
-        console.log("response:");
-        console.dir(response);
-        return response.json();
-    })
-    .then(data => {
-        console.dir(data);
-        snips = data;
-        loadExistingSnip(snips[0]);
-        connectSocket(1);
-        loadFlask();
-        updateEditorContents(snip.title, snip.content);
-    });
-
-console.log("snips: " + snips);
-
 function editSnip() {
-    console.log("sending:");
-    console.dir(snip);
-    socket.send(JSON.stringify(snip));
+    if(socketIsConnected) {
+        socket.send(JSON.stringify(snip));
+    } else {
+        console.log("setting storage: " + snip.content);
+        localStorage.setItem('content', snip.content);
+        changesQueued = true;
+    }
 }
 
-const editSnipDebounced = debounce(() => editSnip(), 500);
-
 function loadExistingSnip(data) {
-    console.log("load existing:");
-    console.dir(data);
     snip = data;
+
+    //new snip, attempt to overwrite content with local cache if exists
+    if(snip.createdDate === snip.modifiedDate) {
+        if(!!localStorage.getItem('content')) { //check for not null/empty/undef/etc
+            snip.content = localStorage.getItem('content');
+            if(socketIsConnected) {
+                socket.send(JSON.stringify(snip));
+            } else {
+                changesQueued = true;
+            }
+        }
+    }
 }
 
 function updateEditorContents(title, content) {
@@ -80,16 +77,20 @@ function connectSocket(retryTimeout) {
     };
 
     socket.onopen = function() { //handle filling snip if exists?
-        console.log("socket connected");
+        socketIsConnected = true;
+        //if snip updates apply, send them? need to handle if changes on both ends lol
+        if(changesQueued) {
+            editSnip();
+            changesQueued = false;
+        }
     }
 
     socket.onmessage = function(event) {
-        console.log("message received:");
-        console.dir(event.data);
         onUpdate(JSON.parse(event.data));
     };
 
     socket.onclose = function(event) {
+        socketIsConnected = false;
         var explanation = "";
         if (event.reason && event.reason.length > 0) {
             explanation = event.reason;
@@ -104,4 +105,29 @@ function connectSocket(retryTimeout) {
         let newTimeout = Math.min(10, retryTimeout + 2); //bump up retry timeout by 2 seconds, up to max of 10
         setTimeout(connectSocket(newTimeout), retryTimeout * 1000);
     }
+}
+
+const editSnipDebounced = debounce(() => editSnip(), 500);
+
+if(isLoggedIn) {
+    fetch("/snips")
+        .then(response => {
+            return response.json();
+        })
+        .then(data => {
+            snips = data;
+            loadExistingSnip(snips[0]);
+            connectSocket(1);
+            $(() => {
+                loadFlask();
+                updateEditorContents(snip.title, snip.content);
+            });
+        });
+} else {
+    snip = { title: "untitled", content: "welcome! edit me" };
+    snips = [snip];
+    $(() => { //load flask on document.ready
+        loadFlask();
+        updateEditorContents(snip.title, snip.content);
+    });
 }
