@@ -6,6 +6,7 @@ import com.okta.demo.ktor.schema.Snips
 import com.okta.demo.ktor.server.SnipServer
 import io.ktor.application.*
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -21,7 +22,7 @@ class SnipRepository(private val application: Application) {
     fun getSnipsByUser(username: String) : List<Snip> { //maybe change return type to the native iterator thing for callers to use?
         val result = mutableListOf<Snip>()
         transaction {
-            result.addAll(Snip.find { Snips.username eq username } )
+            result.addAll(Snip.find { Snips.username eq username }.orderBy(Snips.createdOn to SortOrder.ASC) )
         }
         if(result.isEmpty()) {
             result.add(createSnip(username, "untitled",""))

@@ -19,15 +19,16 @@ import org.kodein.di.instance
 import org.kodein.di.ktor.di
 
 fun Application.setupRoutes() = routing {
-    val repo by di().instance<SnipRepository>()
-    val server by di().instance<SnipServer>()
+    val di = di()
+    val repo by di.instance<SnipRepository>()
+    val server by di.instance<SnipServer>()
 
     fun checkUsername(call: ApplicationCall) : String {
         return call.session?.username ?: throw SecurityException("must be logged in")
     }
 
     get("/") {
-        call.respondHtmlTemplate(ScratchTemplate(call.session?.username, call.session?.displayName)) {
+        call.respondHtmlTemplate(ScratchTemplate(di, call.session?.username, call.session?.displayName)) {
             content {
                 textEditor()
             }

@@ -22,7 +22,6 @@ class SnipUserSession(val username: String, val id: Int, private val session: We
     //TODO generate GUID for session, track on snip edit so that we don't accidentally apply old session edits?
 
     override fun propertyChange(evt: PropertyChangeEvent?) {
-        //need to check here whether snip being changed (UN/ID) is to be notified because all sessions will get this
         evt?.newValue?.let {
             if(matchPropertyName(evt.propertyName)) {
                 log.debug("detected changed snip: ${evt.propertyName}")

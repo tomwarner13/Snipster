@@ -1,9 +1,9 @@
-let snips = [];
 let socket = null;
 let snip = {};
 let flask = {};
 let socketIsConnected = false;
 let changesQueued = false;
+let closeAction = () => { };
 
 const debounce = (callback, wait) => {
   let timeoutId = null;
@@ -60,14 +60,22 @@ function loadExistingSnip(data) {
     }
 }
 
+function loadActive(id) {
+    if(id === snip.id) return; //current snip already active, no-op
+    snip = snips.find(s => s.id === id);
+    updateEditorContents(snip.title, snip.content);
+    closeAction = () => connectSocket(1);
+    socket.close();
+}
+
 function updateEditorContents(title, content) {
     flask.updateCode(content);
 }
 
 function connectSocket(retryTimeout) {
+    if(socketIsConnected) { console.log("connected already"); return; }
     //websocket protocol has to be secure/insecure to match http* protocol
-    let wsProtocol = "wss://";
-    if(location.protocol === "http:") wsProtocol = "ws://";
+    let wsProtocol = (location.protocol === "http:") ? "ws://" : "wss://";
 
     socket = new WebSocket(wsProtocol + window.location.host + "/socket/" + snip.id);
 
@@ -78,6 +86,7 @@ function connectSocket(retryTimeout) {
 
     socket.onopen = function() { //handle filling snip if exists?
         socketIsConnected = true;
+        console.log("socket connect for " + snip.id);
         //if snip updates apply, send them? need to handle if changes on both ends lol
         if(changesQueued) {
             editSnip();
@@ -90,12 +99,18 @@ function connectSocket(retryTimeout) {
     };
 
     socket.onclose = function(event) {
+        console.log("onclose called");
         socketIsConnected = false;
         var explanation = "";
         if (event.reason && event.reason.length > 0) {
             explanation = event.reason;
         } else {
             explanation = "Reason unknown";
+        }
+        if(explanation === "OK") {
+            closeAction();
+            closeAction = () => { };
+            return; //socket was closed by client code, run continuation and leave
         }
 
         console.log("socket closed:" + explanation);
@@ -110,24 +125,14 @@ function connectSocket(retryTimeout) {
 const editSnipDebounced = debounce(() => editSnip(), 500);
 
 if(isLoggedIn) {
-    fetch("/snips")
-        .then(response => {
-            return response.json();
-        })
-        .then(data => {
-            snips = data;
-            loadExistingSnip(snips[0]);
-            connectSocket(1);
-            $(() => {
-                loadFlask();
-                updateEditorContents(snip.title, snip.content);
-            });
-        });
+    loadExistingSnip(snips[0]);
+    connectSocket(1);
 } else {
     snip = { title: "untitled", content: "welcome! edit me" };
     snips = [snip];
-    $(() => { //load flask on document.ready
-        loadFlask();
-        updateEditorContents(snip.title, snip.content);
-    });
 }
+
+$(() => { //load flask on document.ready
+    loadFlask();
+    updateEditorContents(snip.title, snip.content);
+});
