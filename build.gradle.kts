@@ -1,3 +1,4 @@
+
 val ktor_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
@@ -49,6 +50,8 @@ dependencies {
     implementation("io.ktor:ktor-gson:$ktor_version")
     implementation("io.ktor:ktor-websockets:$ktor_version")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
+    implementation("junit:junit:4.12")
+    implementation("org.junit.jupiter:junit-jupiter:5.4.2")
 }
 
 kotlin.sourceSets["main"].kotlin.srcDirs("src")
@@ -60,4 +63,10 @@ sourceSets["test"].resources.srcDirs("testresources")
 //for heroku
 tasks.create("stage") {
     dependsOn("installDist")
+}
+
+tasks {
+    "test"(Test::class) {
+        useJUnitPlatform()
+    }
 }

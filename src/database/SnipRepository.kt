@@ -1,5 +1,6 @@
 package com.okta.demo.ktor.database
 
+import com.okta.demo.ktor.cache.CacheProvider
 import com.okta.demo.ktor.schema.Snip
 import com.okta.demo.ktor.schema.SnipDc
 import com.okta.demo.ktor.schema.Snips
@@ -18,6 +19,7 @@ class SnipRepository(private val application: Application) {
     private val _conn by di{application}.instance<DatabaseConnection>()
     private val _server by di{application}.instance<SnipServer>()
     private val _db : Database = _conn.db //not using these? or requires initialization and this is kind of a hack?
+    private val _cache by di{application}.instance<CacheProvider>()
 
     fun getSnipsByUser(username: String) : List<Snip> { //maybe change return type to the native iterator thing for callers to use?
         val result = mutableListOf<Snip>()
@@ -27,7 +29,16 @@ class SnipRepository(private val application: Application) {
         if(result.isEmpty()) {
             result.add(createSnip(username, "untitled",""))
         }
+        _cache.putObject("ownedSnips:$username", result.map { it.id }, 300)
         return result
+    }
+
+    fun getOwnedSnips(username: String) : List<Int> {
+        return _cache.getOrFetchObject("ownedSnips:$username", {
+            return@getOrFetchObject transaction {
+                return@transaction Snip.find { Snips.username eq username }.map { it.id.value }
+            }
+        }, 300)
     }
 
     fun getSnip(id: Int) : Snip { //does this work correctly when snip no exist?
@@ -37,6 +48,7 @@ class SnipRepository(private val application: Application) {
     }
 
     fun createSnip(username: String, title: String, content: String): Snip {
+        //TODO this also needs to update owned snips for username
         return transaction {
             Snip.new {
                 this.username = username
@@ -61,6 +73,7 @@ class SnipRepository(private val application: Application) {
     }
 
     fun deleteSnip(id: Int, username: String) : Int { //or by ID and confirm user?
+        //TODO update owned snips
         return transaction {
             Snips.deleteWhere { Snips.id eq id and (Snips.username eq username) } //suspect this returns the total # of records deleted but need to confirm
         }
