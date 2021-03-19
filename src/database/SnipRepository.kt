@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.kodein.di.instance
 import org.kodein.di.ktor.di
+import java.util.*
 
 class SnipRepository(private val application: Application) {
     private val _conn by di{application}.instance<DatabaseConnection>()
@@ -29,16 +30,16 @@ class SnipRepository(private val application: Application) {
         if(result.isEmpty()) {
             result.add(createSnip(username, "untitled",""))
         }
-        _cache.putObject("ownedSnips:$username", result.map { it.id }, 300)
+        _cache.putObject("ownedSnips:$username", result.map { it.id }.toMutableSet())
         return result
     }
 
-    fun getOwnedSnips(username: String) : List<Int> {
-        return _cache.getOrFetchObject("ownedSnips:$username", {
+    fun getOwnedSnips(username: String) : MutableSet<Int> {
+        return _cache.getOrFetchObject("ownedSnips:$username") {
             return@getOrFetchObject transaction {
-                return@transaction Snip.find { Snips.username eq username }.map { it.id.value }
+                return@transaction Snip.find { Snips.username eq username }.map { it.id.value }.toMutableSet()
             }
-        }, 300)
+        }
     }
 
     fun getSnip(id: Int) : Snip { //does this work correctly when snip no exist?
@@ -48,15 +49,23 @@ class SnipRepository(private val application: Application) {
     }
 
     fun createSnip(username: String, title: String, content: String): Snip {
-        //TODO this also needs to update owned snips for username
         return transaction {
-            Snip.new {
+            val result = Snip.new {
                 this.username = username
                 this.title = title
                 this.content = content
                 createdOn = DateTime.now()
                 lastModified = DateTime.now()
             }
+
+            _cache.getIfExists<MutableSet<Int>>("ownedSnips:$username")?.let {
+                it.add(result.id.value)
+                _cache.putObject("ownedSnips:$username", it)
+            }
+
+            _server.snipCreated(result.toDc())
+
+            return@transaction result
         }
     }
 
@@ -72,11 +81,24 @@ class SnipRepository(private val application: Application) {
         _server.snipUpdated(dc)
     }
 
-    fun deleteSnip(id: Int, username: String) : Int { //or by ID and confirm user?
-        //TODO update owned snips
-        return transaction {
+    fun deleteSnip(id: Int, username: String, editingSessionId: String) : Int { //or by ID and confirm user?
+        val recordsDeleted = transaction {
             Snips.deleteWhere { Snips.id eq id and (Snips.username eq username) } //suspect this returns the total # of records deleted but need to confirm
         }
+
+        val dc = SnipDc(
+            id,
+            username,
+            "",
+            "",
+            Date(),
+            Date(),
+            editingSessionId
+        )
+
+        _server.snipDeleted(dc)
+
+        return recordsDeleted
     }
 
 }

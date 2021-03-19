@@ -5,7 +5,6 @@ import com.okta.demo.ktor.database.SnipRepository
 import com.okta.demo.ktor.schema.SnipDc
 import com.okta.demo.ktor.server.SnipServer
 import com.okta.demo.ktor.server.SnipUserSession
-import com.okta.demo.ktor.server.UserConnection
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
@@ -44,15 +43,6 @@ fun Application.setupRoutes() = routing {
         call.respond(HttpStatusCode.Found, result)
     }
 
-    //TEMP TEXT ROUT TO DELETE
-    get("/snips/create") {
-        val username = checkUsername(call)
-        log.debug("$username creating snip")
-
-        val result = repo.createSnip(username, "test title", "test content").toDc()
-        call.respond(HttpStatusCode.Found, result)
-    }
-
     post("/snips") {
         val username = checkUsername(call)
         val snip = call.receive<SnipDc>() //do i want this? or just the fields used? will it work by just giving fields used?
@@ -64,7 +54,7 @@ fun Application.setupRoutes() = routing {
     put("/snips/{id}") {
         val username = checkUsername(call)
         val snip = call.receive<SnipDc>() //do i want this? or just the fields used? will it work by just giving fields used?
-        log.debug("$username creating snip:")
+        log.debug("$username editing snip:")
         log.debug(snip.toString())
         repo.editSnip(snip)
     }
@@ -73,11 +63,11 @@ fun Application.setupRoutes() = routing {
         //TODO this
     }
 
-    webSocket("/socket/{id}") { //TODO change this to username and keep persistent track of all snips open by user?
+    webSocket("/socket/{username}") {
         val username = checkUsername(call)
-        val id = call.parameters["id"]?.toInt() ?: throw SecurityException("snip ID must be provided") //TODO this is a big security risk if this method stays around
-        log.debug("$username opening socket for snip $id")
-        val session = SnipUserSession(username, id, this, this@setupRoutes)
+        if(username != call.parameters["username"]) throw SecurityException("attempted to modify unowned snips!")
+        log.debug("$username opening socket")
+        val session = SnipUserSession(username, this, this@setupRoutes)
         server.registerSession(session)
 
         try {
@@ -102,38 +92,6 @@ fun Application.setupRoutes() = routing {
         }
         finally {
             server.removeSession(session)
-        }
-    }
-
-    webSocket("/socket/un/{username}") {
-        val username = checkUsername(call)
-        if(username != call.parameters["username"]) throw SecurityException("attempted to modify unowned snip!")
-        log.debug("$username opening socket")
-        val connection = UserConnection(username, this, this@setupRoutes)
-        //server.registerSession(session)
-
-        try {
-            incoming.consumeEach { frame ->
-                // Frames can be [Text], [Binary], [Ping], [Pong], [Close].
-                // We are only interested in textual messages, so we filter it.
-                if (frame is Frame.Text) {
-                    // only worry about text frames for now
-                    val gson = Gson()
-                    var text = frame.readText()
-                    log.debug("text received: $text")
-                    var snip = gson.fromJson(text, SnipDc::class.java)
-                    //snip.editingSessionId = session.sessionId
-                    log.debug("updating snip " + snip.id)
-                    repo.editSnip(snip)
-                }
-            }
-        }
-        catch(e: Exception) {
-            log.error("websocket error! $e")
-            throw e //TODO literally any handling here
-        }
-        finally {
-            //server.removeSession(session)
         }
     }
 

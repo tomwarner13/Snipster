@@ -28,10 +28,57 @@ function loadFlask() {
 }
 
 function onUpdate(data) {
-    if(data.title !== snip.title || data.content !== snip.content) {
-        snip = data;
-        updateEditorContents(snip.title, snip.content);
+    //check event type, delegate as necessary
+    let change = data.snip;
+    switch(data.changeType) {
+        case "Created":
+            onCreated(change);
+            break;
+        case "Edited":
+            onEdited(change);
+            break;
+        case "Deleted":
+            onDeleted(change);
+            break;
+        default:
+            let message = "unexpected change type: " + data.changeType;
+            console.log(message);
+            throw message;
     }
+}
+
+function onCreated(data) {
+    //add new snip to storage
+
+    //create new tab with new title
+}
+
+function onEdited(data) {
+    //check if active snip is getting edited, update flask if so
+    if(data.id === snip.id) {
+        if(data.title !== snip.title || data.content !== snip.content) {
+            snip = data;
+            updateEditorContents(snip.title, snip.content);
+        }
+    } else {
+        //update in storage
+        snips["" + data.id] = data;
+    }
+
+    updateTab(data.id, data.title);
+}
+
+function onDeleted(data) {
+    //remove tab, remove snip from storage
+
+}
+
+function createNewSnip() {
+    //TODO this
+}
+
+function updateTab(id, newTitle) {
+
 }
 
 function editSnip() {
@@ -42,6 +89,10 @@ function editSnip() {
         localStorage.setItem('content', snip.content);
         changesQueued = true;
     }
+}
+
+function deleteSnip(id) {
+    //TODO this
 }
 
 function loadExistingSnip(data) {
@@ -77,7 +128,7 @@ function connectSocket(retryTimeout) {
     //websocket protocol has to be secure/insecure to match http* protocol
     let wsProtocol = (location.protocol === "http:") ? "ws://" : "wss://";
 
-    socket = new WebSocket(wsProtocol + window.location.host + "/socket/" + snip.id);
+    socket = new WebSocket(wsProtocol + window.location.host + "/socket/" + username);
 
     socket.onerror = function(event) {
         console.log("socket error:"); //TODO more
@@ -86,7 +137,6 @@ function connectSocket(retryTimeout) {
 
     socket.onopen = function() { //handle filling snip if exists?
         socketIsConnected = true;
-        console.log("socket connect for " + snip.id);
         //if snip updates apply, send them? need to handle if changes on both ends lol
         if(changesQueued) {
             editSnip();
@@ -95,6 +145,7 @@ function connectSocket(retryTimeout) {
     }
 
     socket.onmessage = function(event) {
+        //incoming frames are now of type ClientMessage, handle as such
         onUpdate(JSON.parse(event.data));
     };
 
@@ -125,11 +176,11 @@ function connectSocket(retryTimeout) {
 const editSnipDebounced = debounce(() => editSnip(), 500);
 
 if(isLoggedIn) {
-    loadExistingSnip(snips[0]);
+    loadExistingSnip(Object.keys(snips)[0]); //
     connectSocket(1);
 } else {
     snip = { title: "untitled", content: "welcome! edit me" };
-    snips = [snip];
+    snips = {"0": snip};
 }
 
 $(() => { //load flask on document.ready

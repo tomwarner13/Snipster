@@ -1,6 +1,11 @@
 package com.okta.demo.ktor.server
 
 import com.google.gson.Gson
+import com.okta.demo.ktor.database.SnipRepository
+import com.okta.demo.ktor.helper.SnipChangeEvent
+import com.okta.demo.ktor.schema.ChangeType
+import com.okta.demo.ktor.schema.ClientMessage
+import com.okta.demo.ktor.schema.SnipDc
 import io.ktor.application.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.*
@@ -14,31 +19,50 @@ import java.beans.PropertyChangeListener
 import java.util.*
 
 //TODO track list of open snips per user session here
-class SnipUserSession(val username: String, val id: Int, private val session: WebSocketServerSession, private val application: Application)
+class SnipUserSession(val username: String, private val session: WebSocketServerSession, private val application: Application)
     : PropertyChangeListener {
+
     private val log by di{application}.instance<Logger>()
+    private val _repo by di{application}.instance<SnipRepository>()
+
     val sessionId = UUID.randomUUID().toString()
 
-    //TODO generate GUID for session, track on snip edit so that we don't accidentally apply old session edits?
+    private val userSnips : MutableSet<Int> = _repo.getOwnedSnips(username) //what if this changes? notify through property listeners? or always check cache?
+    private val otherSnips : MutableSet<Int> = emptyList<Int>().toMutableSet()
 
     override fun propertyChange(evt: PropertyChangeEvent?) {
         evt?.newValue?.let {
-            if(matchPropertyName(evt.propertyName)) {
-                log.debug("detected changed snip: ${evt.propertyName}")
-                GlobalScope.launch {
+            val event = matchPropertyName(evt.propertyName)
+            if(event != null && evt.newValue is SnipDc) { //handle deletes without full object?
+                val dc = evt.newValue as SnipDc
+                val message = ClientMessage(event.type, dc)
+                log.debug("detected change: ${evt.propertyName}")
+
+                GlobalScope.launch { //notify client(s)
                     val gson = Gson()
-                    val frame = Frame.Text(gson.toJson(evt.newValue))
+                    val frame = Frame.Text(gson.toJson(message))
                     session.send(frame)
-                    log.debug("sent frame: ${frame.readText()}") //TODO delete as soon as confirmed working
-                }//todo can we make sure here that it is a SnipDc?
+                }
+
+                when(event.type) { //update records
+                    ChangeType.Created -> {
+                        userSnips.add(event.id)
+                    }
+                    ChangeType.Deleted -> {
+                        userSnips.remove(event.id)
+                    }
+                }
             }
         }
     }
 
-    private fun matchPropertyName(propertyName: String) : Boolean {
-        val values = propertyName.split(':')
-        if(values.size != 3) throw IllegalArgumentException("property name '$propertyName' was not in a correct format!")
-        //confirm that username and snip ID match, don't match session ID because we don't want to feed changes back to the same session
-        return values[0] == username && values[1] == id.toString() && values[2] != sessionId
+    private fun matchPropertyName(propertyName: String) : SnipChangeEvent? {
+        val event = SnipChangeEvent.fromPropertyName(propertyName)
+        if(event.sessionId == sessionId) return null
+        if(event.username == username) return event
+        if(otherSnips.any {it == event.id}) return event
+        return null
     }
+
+    fun snips() = userSnips + otherSnips
 }

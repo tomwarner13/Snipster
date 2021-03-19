@@ -1,4 +1,4 @@
-import com.okta.demo.ktor.helper.ChangeType
+import com.okta.demo.ktor.schema.ChangeType
 import com.okta.demo.ktor.helper.SnipChangeEvent
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

@@ -21,10 +21,10 @@ class ScratchTemplate(private val di: LazyDI, private val username: String? = nu
 
     val content = Placeholder<HtmlBlockTag>()
 
-    private val snips: List<SnipDc> = if (isLoggedIn) {
-        username?.let { u -> repository.getSnipsByUser(u).map { s -> s.toDc() } }!!
+    private val snips: Map<Int, SnipDc> = if (isLoggedIn) {
+        username?.let { u -> repository.getSnipsByUser(u).map { it.id.value to it.toDc() }.toMap()}!!
     } else {
-        emptyList() //default snip here instead of server-side generate?
+        emptyMap() //default snip here instead of server-side generate?
     }
 
     private val snipsJson = "let snips = " + Gson().toJson(snips) + ";"
@@ -99,8 +99,8 @@ class ScratchTemplate(private val di: LazyDI, private val username: String? = nu
                                     id = "default-tab"
                                     attributes["data-bs-toggle"] = "tab"
                                     attributes["data-bs-target"] = "#"
-                                    attributes["onclick"] = "loadActive(${it.id})"
-                                    +it.title
+                                    attributes["onclick"] = "loadActive(${it.key})"
+                                    +it.value.title
                                 }
                             }
                             firstSnip = false

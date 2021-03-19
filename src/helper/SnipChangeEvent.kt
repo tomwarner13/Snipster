@@ -1,5 +1,7 @@
 package com.okta.demo.ktor.helper
 
+import com.okta.demo.ktor.schema.ChangeType
+
 class SnipChangeEvent (
     val id: Int,
     val type: ChangeType,
@@ -20,10 +22,4 @@ class SnipChangeEvent (
     }
 
     fun toPropertyName() = "$id:$type:$username:$sessionId"
-}
-
-enum class ChangeType {
-    Created,
-    Edited,
-    Deleted
 }

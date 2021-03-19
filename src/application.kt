@@ -1,5 +1,7 @@
 package com.okta.demo.ktor
 
+import com.okta.demo.ktor.cache.CacheProvider
+import com.okta.demo.ktor.cache.MemoryCacheProvider
 import com.okta.demo.ktor.database.ConnectionSettings
 import com.okta.demo.ktor.database.DatabaseConnection
 import com.okta.demo.ktor.database.SnipRepository
@@ -28,7 +30,7 @@ fun Application.module() {
     // We use sessions stored in signed cookies
     install(Sessions) {
         cookie<UserSession>("MY_SESSION") {
-            val secretEncryptKey = hex("00112233445566778899aabbccddeeff")
+            val secretEncryptKey = hex("00112233445566778899aabbccddeeff") //TODO this should probably not be in source control wtf
             val secretAuthKey = hex("02030405060708090a0b0c")
             cookie.extensions["SameSite"] = "lax"
             cookie.httpOnly = true
@@ -67,6 +69,7 @@ fun Application.module() {
         bind<SnipRepository>() with singleton { SnipRepository(this@module) }
         bind<Logger>() with singleton { this@module.log }
         bind<SnipServer>() with singleton { SnipServer() }
+        bind<CacheProvider>() with singleton { MemoryCacheProvider() }
     }
 }
 
