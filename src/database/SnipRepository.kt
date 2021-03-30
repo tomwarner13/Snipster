@@ -81,7 +81,7 @@ class SnipRepository(private val application: Application) {
         _server.snipUpdated(dc)
     }
 
-    fun deleteSnip(id: Int, username: String, editingSessionId: String) : Int { //or by ID and confirm user?
+    fun deleteSnip(id: Int, username: String) : Int { //or by ID and confirm user?
         val recordsDeleted = transaction {
             Snips.deleteWhere { Snips.id eq id and (Snips.username eq username) } //suspect this returns the total # of records deleted but need to confirm
         }
@@ -93,7 +93,7 @@ class SnipRepository(private val application: Application) {
             "",
             Date(),
             Date(),
-            editingSessionId
+            "" //leave this blank so the event propagates to all sessions
         )
 
         _server.snipDeleted(dc)

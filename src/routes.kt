@@ -45,10 +45,11 @@ fun Application.setupRoutes() = routing {
 
     post("/snips") {
         val username = checkUsername(call)
-        val snip = call.receive<SnipDc>() //do i want this? or just the fields used? will it work by just giving fields used?
+        val snip = call.receive<SnipDc>()
         log.debug("$username creating snip:")
         log.debug(snip.toString())
-        repo.createSnip(username, snip.title, snip.content)
+        val result = repo.createSnip(username, snip.title, snip.content).toDc()
+        call.respond(HttpStatusCode.Created, result)
     }
 
     put("/snips/{id}") {
@@ -57,10 +58,14 @@ fun Application.setupRoutes() = routing {
         log.debug("$username editing snip:")
         log.debug(snip.toString())
         repo.editSnip(snip)
+        call.respond(HttpStatusCode.NoContent)
     }
 
     delete("/snips/{id}") {
-        //TODO this
+        val username = checkUsername(call)
+        val id = call.parameters["id"]?.toInt() ?: throw SecurityException("snip ID required for deletion")
+        repo.deleteSnip(id, username)
+        call.respond(HttpStatusCode.NoContent)
     }
 
     webSocket("/socket/{username}") {

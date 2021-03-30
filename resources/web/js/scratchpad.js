@@ -4,6 +4,7 @@ let flask = {};
 let socketIsConnected = false;
 let changesQueued = false;
 let closeAction = () => { };
+let shouldClickToNewTab = false;
 
 const debounce = (callback, wait) => {
   let timeoutId = null;
@@ -30,7 +31,7 @@ function loadFlask() {
 function onUpdate(data) {
     //check event type, delegate as necessary
     let change = data.snip;
-    switch(data.changeType) {
+    switch(data.changetype) {
         case "Created":
             onCreated(change);
             break;
@@ -41,16 +42,20 @@ function onUpdate(data) {
             onDeleted(change);
             break;
         default:
-            let message = "unexpected change type: " + data.changeType;
+            let message = "unexpected change type: " + data.changetype;
             console.log(message);
             throw message;
     }
 }
 
 function onCreated(data) {
-    //add new snip to storage
-
-    //create new tab with new title
+    snips["" + data.id] = data;
+    addTab(data.id, data.title);
+    setDeleteVisibility();
+    if(shouldClickToNewTab) {
+        $("#snip-btn-" + data.id).click();
+        shouldClickToNewTab = false;
+    }
 }
 
 function onEdited(data) {
@@ -69,30 +74,104 @@ function onEdited(data) {
 }
 
 function onDeleted(data) {
-    //remove tab, remove snip from storage
-
+    $(".snip-tab-btn").first().click();
+    delete snips["" + data.id];
+    deleteTab(data.id);
+    setDeleteVisibility();
 }
 
-function createNewSnip() {
-    //TODO this
+function setDeleteVisibility() {
+    if(Object.keys(snips).length > 1) {
+        $("#delete-snip-btn").show();
+    } else {
+        $("#delete-snip-btn").hide();
+    }
+}
+
+function addTab(id, title) {
+    let tabHtml = `<li class="nav-item" id="snip-tab-${id}"><button type="button" class="nav-link snip-tab-btn" id="snip-btn-${id}" data-bs-toggle="tab" data-bs-target="#" onclick="loadActive(${id})"><i class="fas fa-sticky-note me-1"></i><span id="snip-name-${id}">${title}</span></button></li>`;
+    $("#create-new-tab").before(tabHtml);
 }
 
 function updateTab(id, newTitle) {
+    $('#snip-name-' + id).text(newTitle);
+}
 
+function deleteTab(id) {
+    $("#snip-tab-" + id).remove();
+}
+
+function renameDialog() {
+    $('.control-element').hide();
+    $('.rename-element').show();
+    $('#rename-snip-input').val(snip.title);
+}
+
+function deleteDialog() {
+    if(snips.length === 1) return;
+    $('.control-element').hide();
+    $('.delete-element').show();
+}
+
+function initializeKeyListeners() {
+    $('#rename-snip-input').on('keyup', (e) => {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            renameSnip();
+        }
+    });
+}
+
+function renameSnip() {
+    snip.title = $('#rename-snip-input').val();
+    editSnip();
+    resetControls();
+    updateTab(snip.id, snip.title);
+}
+
+function resetControls() {
+    $('.control-hidden').hide();
+    $('.control-element').show();
+}
+
+function createNewSnip() {
+    let body = { title: "untitled", content: "edit me" };
+    shouldClickToNewTab = true;
+    fetch("/snips", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    })
+    .then(_ => {
+        console.log("shouldClick set true");
+        shouldClickToNewTab = false;
+    })
+    .catch(e => {
+        console.log("create failed! " + e);
+        shouldClickToNewTab = false;
+    });
 }
 
 function editSnip() {
     if(socketIsConnected) {
         socket.send(JSON.stringify(snip));
     } else {
+    //this will need to handle title too
         console.log("setting storage: " + snip.content);
         localStorage.setItem('content', snip.content);
         changesQueued = true;
     }
 }
 
-function deleteSnip(id) {
-    //TODO this
+function deleteSnip() {
+    fetch("/snips/" + snip.id, {
+        method: 'DELETE'
+    })
+    .then(_ => {
+        resetControls();
+    })
+    .catch(e => console.log("delete failed! " + e));
 }
 
 function loadExistingSnip(data) {
@@ -113,7 +192,7 @@ function loadExistingSnip(data) {
 
 function loadActive(id) {
     if(id === snip.id) return; //current snip already active, no-op
-    snip = snips.find(s => s.id === id);
+    snip = snips["" + id];
     updateEditorContents(snip.title, snip.content);
     closeAction = () => connectSocket(1);
     socket.close();
@@ -145,12 +224,10 @@ function connectSocket(retryTimeout) {
     }
 
     socket.onmessage = function(event) {
-        //incoming frames are now of type ClientMessage, handle as such
         onUpdate(JSON.parse(event.data));
     };
 
     socket.onclose = function(event) {
-        console.log("onclose called");
         socketIsConnected = false;
         var explanation = "";
         if (event.reason && event.reason.length > 0) {
@@ -176,7 +253,7 @@ function connectSocket(retryTimeout) {
 const editSnipDebounced = debounce(() => editSnip(), 500);
 
 if(isLoggedIn) {
-    loadExistingSnip(Object.keys(snips)[0]); //
+    loadExistingSnip(Object.values(snips)[0]);
     connectSocket(1);
 } else {
     snip = { title: "untitled", content: "welcome! edit me" };
@@ -186,4 +263,5 @@ if(isLoggedIn) {
 $(() => { //load flask on document.ready
     loadFlask();
     updateEditorContents(snip.title, snip.content);
+    initializeKeyListeners();
 });
