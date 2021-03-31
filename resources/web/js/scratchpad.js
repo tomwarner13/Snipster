@@ -178,7 +178,7 @@ function loadExistingSnip(data) {
     snip = data;
 
     //new snip, attempt to overwrite content with local cache if exists
-    if(snip.createdDate === snip.modifiedDate) {
+    if(snip.createdOn === snip.lastModified) {
         if(!!localStorage.getItem('content')) { //check for not null/empty/undef/etc
             snip.content = localStorage.getItem('content');
             localStorage.removeItem('content'); //we don't want this persisting through logout now
