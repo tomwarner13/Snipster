@@ -181,6 +181,7 @@ function loadExistingSnip(data) {
     if(snip.createdDate === snip.modifiedDate) {
         if(!!localStorage.getItem('content')) { //check for not null/empty/undef/etc
             snip.content = localStorage.getItem('content');
+            localStorage.removeItem('content'); //we don't want this persisting through logout now
             if(socketIsConnected) {
                 socket.send(JSON.stringify(snip));
             } else {
@@ -252,16 +253,25 @@ function connectSocket(retryTimeout) {
 
 const editSnipDebounced = debounce(() => editSnip(), 500);
 
+function fixSignOnWidget() {
+    $('.okta-sign-in-header').hide();
+    $('.okta-form-title').hide();
+    let createAccountLinkHtml = `<div class="o-form-button-bar"><a id="okta-signin-create" href="${oktaHost}/signin/register" class="btn btn-primary button button-primary align-middle">Create Account</a></div>`;
+    $('.o-form-button-bar').after(createAccountLinkHtml);
+}
+
 if(isLoggedIn) {
     loadExistingSnip(Object.values(snips)[0]);
     connectSocket(1);
 } else {
-    snip = { title: "untitled", content: "welcome! edit me" };
+    let tempContent = !!localStorage.getItem('content') ? localStorage.getItem('content') : 'welcome! edit me';
+    snip = { title: "untitled", content: tempContent }; //TODO check local storage for snip first
     snips = {"0": snip};
 }
 
 $(() => { //load flask on document.ready
     loadFlask();
+    if(!isLoggedIn) fixSignOnWidget();
     updateEditorContents(snip.title, snip.content);
     initializeKeyListeners();
 });

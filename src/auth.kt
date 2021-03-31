@@ -17,7 +17,7 @@ fun Application.setupAuth() {
 
     install(Authentication) {
         oauth {
-            urlProvider = { "${oktaConfig.host}/login/authorization-callback" } //NEED TO LOAD HOST FROM ENV CONFIG OR SOMETHING
+            urlProvider = { "${oktaConfig.host}/login/authorization-callback" }
             providerLookup = { oktaConfig.asOAuth2Config() }
             client = HttpClient()
         }
@@ -52,16 +52,12 @@ fun Application.setupAuth() {
 
                 //try to get handle, fallback to subject field
                 val fullName = (idToken.claims["name"] ?: accessToken.claims["sub"] ?: "UNKNOWN_NAME").toString()
-                log.debug("user $fullName logged in")
-
-                val claims = idToken.claims;
-                claims.forEach {
-                        (k, v) -> log.debug("$k : $v") //log the user fields to figure what okta has available
-                }
+                val username = idToken.claims["preferred_username"].toString()
+                log.debug("user $fullName : $username logged in")
 
                 // Create a session object with "slugified" username
                 val session = UserSession(
-                    username = claims["preferred_username"].toString(),
+                    username = username,
                     displayName = fullName.split(" ").first(),
                     idToken = idTokenString
                 )

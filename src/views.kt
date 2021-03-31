@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.okta.demo.ktor.database.SnipRepository
 import com.okta.demo.ktor.schema.Snip
 import com.okta.demo.ktor.schema.SnipDc
+import com.typesafe.config.ConfigFactory
 import io.ktor.html.*
 import kotlinx.html.*
 import kotlinx.html.FormEncType.applicationXWwwFormUrlEncoded
@@ -11,13 +12,15 @@ import kotlinx.html.FormMethod.post
 import kotlinx.html.impl.DelegatingMap
 import org.kodein.di.LazyDI
 import org.kodein.di.instance
+import java.lang.Exception
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 
 class ScratchTemplate(private val di: LazyDI, private val username: String? = null, private val displayname: String? = null) : Template<HTML> {
     private val repository by di.instance<SnipRepository>()
-    private val isLoggedIn = username !== null;
+    private val isLoggedIn = username != null;
+    private val oktaConfig = oktaConfigReader(ConfigFactory.load() ?: throw Exception("Failed to load okta config"))
 
     val content = Placeholder<HtmlBlockTag>()
 
@@ -30,11 +33,16 @@ class ScratchTemplate(private val di: LazyDI, private val username: String? = nu
     private val snipsJson = "let snips = " + Gson().toJson(snips) + ";"
 
     override fun HTML.apply() {
+
         head {
             title { +"Snipster" }
             styleLink("https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css")
             styleLink("/css/ohsnap.css")
             styleLink("/fa/css/all.css")
+            if(!isLoggedIn) {
+                styleLink("https://global.oktacdn.com/okta-signin-widget/5.5.0/css/okta-sign-in.min.css")
+                script(src = "https://global.oktacdn.com/okta-signin-widget/5.5.0/js/okta-sign-in.min.js") {}
+            }
             script(src = "https://unpkg.com/codeflask/build/codeflask.min.js") {}
             script(src = "https://code.jquery.com/jquery-3.5.1.min.js") {
                 attributes["integrity"] = "sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
@@ -50,6 +58,7 @@ class ScratchTemplate(private val di: LazyDI, private val username: String? = nu
                     raw("""
                         let isLoggedIn = $isLoggedIn;
                         let username = "$username";
+                        let oktaHost = "${oktaConfig.oktaHost()}";
                         $snipsJson
                     """)
                 }
@@ -66,8 +75,9 @@ class ScratchTemplate(private val di: LazyDI, private val username: String? = nu
             meta(name="theme-color", content = "#ffffff")
             style {
                 unsafe {
-                    raw(".codeflask { max-height: 750px }")
-                    raw(".control-hidden { display: none }")
+                    raw(".codeflask { max-height: 750px }\n")
+                    raw(".control-hidden { display: none }\n")
+                    raw("#okta-signin-create { line-height: 50px !important }\n") //okta has dumb css, needs override
                 }
             } //TODO move to common stylesheet?
         }
@@ -91,7 +101,12 @@ class ScratchTemplate(private val di: LazyDI, private val username: String? = nu
                                     +"Hello, Guest"
                                 }
                                 div("navbar-item") {
-                                    a(href = "/login", classes = "nav-link mx-2") {
+/*                                    a(href = "/login", classes = "nav-link mx-2") {
+                                        +"Login"
+                                    }*/
+                                    button(classes = "btn btn-secondary", type = ButtonType.button) {
+                                        attributes["data-bs-toggle"] = "modal"
+                                        attributes["data-bs-target"] = "#loginModal"
                                         +"Login"
                                     }
                                 }
@@ -203,12 +218,56 @@ class ScratchTemplate(private val di: LazyDI, private val username: String? = nu
                     insert(content)
                 }
                 div { id="ohsnap" }
-            }
-            /* script { //TODO: language selector dropdown? theme switcher?
-                unsafe {
-                    raw("//this is a script block")
+                if(!isLoggedIn) {
+                    div("modal fade") {
+                        id = "loginModal"
+                        div("modal-dialog") {
+                            div("modal-content") {
+                                div("modal-header") {
+                                    h5("modal-title") {
+                                        +"Login or Sign Up"
+                                    }
+                                    button(classes = "btn-close", type = ButtonType.button) {
+                                        attributes["data-bs-dismiss"] = "modal"
+                                    }
+                                }
+                                div("modal-body") {
+                                    div() {
+                                        id = "oktaLoginContainer"
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-            } */
+            }
+            if(!isLoggedIn) {
+             script {
+                    unsafe {
+                        raw("""
+                            let signIn = new OktaSignIn({
+                                baseUrl: '${oktaConfig.orgUrl}',
+                                el: '#oktaLoginContainer',
+                                clientId: '${oktaConfig.clientId}',
+                                redirectUri: '${oktaConfig.host}/login/authorization-callback',
+                                authParams: {
+                                  scopes: ['openid', 'email', 'profile'],
+                                  issuer: '${oktaConfig.orgUrl}',
+                                  pkce: false,
+                                  responseType: 'code',
+                                  nonce: null
+                                }
+                              }
+                            );
+                            
+                            signIn.showSignInAndRedirect()
+                            .catch((e) => {
+                              console.log("sign in error! " + e);
+                            });
+                        """.trimIndent())
+                    }
+                }
+            }
         }
     }
 }

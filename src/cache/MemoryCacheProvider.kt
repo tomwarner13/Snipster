@@ -17,14 +17,11 @@ class MemoryCacheProvider : CacheProvider {
 
         if(result != null) return result
 
+        //should never be null because loader() should set the object
         throw IllegalStateException("Unable to access cache object!")
     }
 
     override fun <T> getIfExists(key: String): T? {
-        val result = cache.getIfPresent(key) as T
-
-        if(result != null) return result
-
-        throw IllegalStateException("Unable to access cache object!")
+        return cache.getIfPresent(key) as T
     }
 }

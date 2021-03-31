@@ -26,6 +26,10 @@ data class OktaConfig(
             defaultScopes = listOf("openid", "profile"),
             requestMethod = HttpMethod.Post
         )
+
+    fun oktaHost() : String {
+        return orgUrl.replace("/oauth2/default", "")
+    }
 }
 
 fun oktaConfigReader(config: Config): OktaConfig = OktaConfig(

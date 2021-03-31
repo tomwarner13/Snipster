@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.kodein.di.instance
 import org.kodein.di.ktor.di
+import org.slf4j.Logger
 import java.util.*
 
 class SnipRepository(private val application: Application) {
@@ -21,6 +22,7 @@ class SnipRepository(private val application: Application) {
     private val _server by di{application}.instance<SnipServer>()
     private val _db : Database = _conn.db //not using these? or requires initialization and this is kind of a hack?
     private val _cache by di{application}.instance<CacheProvider>()
+    private val _logger by di{application}.instance<Logger>()
 
     fun getSnipsByUser(username: String) : List<Snip> { //maybe change return type to the native iterator thing for callers to use?
         val result = mutableListOf<Snip>()
