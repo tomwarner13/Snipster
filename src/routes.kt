@@ -2,9 +2,12 @@ package com.okta.demo.ktor
 
 import com.google.gson.Gson
 import com.okta.demo.ktor.database.SnipRepository
+import com.okta.demo.ktor.views.PageTemplate
 import com.okta.demo.ktor.schema.SnipDc
 import com.okta.demo.ktor.server.SnipServer
 import com.okta.demo.ktor.server.SnipUserSession
+import com.okta.demo.ktor.views.Editor
+import com.okta.demo.ktor.views.editorSpecificHeaders
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
@@ -28,9 +31,14 @@ fun Application.setupRoutes() = routing {
     }
 
     get("/") {
-        call.respondHtmlTemplate(ScratchTemplate(di, call.session?.username, call.session?.displayName)) {
-            content {
-                textEditor()
+        val snips = Editor.getSnipsForUser(di, call.session?.username)
+
+        call.respondHtmlTemplate(PageTemplate("Snipster", call.session?.username, call.session?.displayName)) {
+            headerContent {
+                editorSpecificHeaders(snips, call.session?.username)
+            }
+            pageContent {
+                insert(Editor(snips, call.session?.username)) {}
             }
         }
     }
@@ -39,7 +47,7 @@ fun Application.setupRoutes() = routing {
         val username = checkUsername(call)
         log.debug("$username requesting all snips")
         val result = repo.getSnipsByUser(username).map { it.toDc() } //fix DB call to create if none exists?
-        log.debug(result.toString());
+        log.debug(result.toString())
         call.respond(HttpStatusCode.Found, result)
     }
 
@@ -82,9 +90,9 @@ fun Application.setupRoutes() = routing {
                 if (frame is Frame.Text) {
                     // only worry about text frames for now
                     val gson = Gson()
-                    var text = frame.readText()
+                    val text = frame.readText()
                     log.debug("text received: $text")
-                    var snip = gson.fromJson(text, SnipDc::class.java)
+                    val snip = gson.fromJson(text, SnipDc::class.java)
                     snip.editingSessionId = session.sessionId
                     log.debug("updating snip " + snip.id)
                     repo.editSnip(snip)

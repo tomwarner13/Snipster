@@ -256,20 +256,20 @@ const editSnipDebounced = debounce(() => editSnip(), 500);
 function fixSignOnWidget() {
     $('.okta-sign-in-header').hide();
     $('.okta-form-title').hide();
-    let createAccountLinkHtml = `<div class="o-form-button-bar"><a id="okta-signin-create" href="${oktaHost}/signin/register" class="btn btn-primary button button-primary align-middle">Create Account</a></div>`;
-    $('.o-form-button-bar').after(createAccountLinkHtml);
+    //let createAccountLinkHtml = `<div class="o-form-button-bar"><a id="okta-signin-create" href="${oktaHost}/signin/register" class="btn btn-primary button button-primary align-middle">Create Account</a></div>`;
+    //$('.o-form-button-bar').after(createAccountLinkHtml);
 }
 
-if(isLoggedIn) {
-    loadExistingSnip(Object.values(snips)[0]);
-    connectSocket(1);
-} else {
-    let tempContent = !!localStorage.getItem('content') ? localStorage.getItem('content') : 'welcome! edit me';
-    snip = { title: "untitled", content: tempContent }; //TODO check local storage for snip first
-    snips = {"0": snip};
-}
+$(() => { //initialize components on document.ready
+    if(isLoggedIn) {
+        loadExistingSnip(Object.values(snips)[0]);
+        connectSocket(1); //TODO move to doc.ready?
+    } else {
+        let tempContent = !!localStorage.getItem('content') ? localStorage.getItem('content') : 'welcome! edit me';
+        snip = { title: "untitled", content: tempContent };
+        snips = {"0": snip};
+    }
 
-$(() => { //load flask on document.ready
     loadFlask();
     if(!isLoggedIn) fixSignOnWidget();
     updateEditorContents(snip.title, snip.content);
