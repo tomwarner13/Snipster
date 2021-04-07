@@ -6,8 +6,7 @@ import com.okta.demo.ktor.views.PageTemplate
 import com.okta.demo.ktor.schema.SnipDc
 import com.okta.demo.ktor.server.SnipServer
 import com.okta.demo.ktor.server.SnipUserSession
-import com.okta.demo.ktor.views.Editor
-import com.okta.demo.ktor.views.editorSpecificHeaders
+import com.okta.demo.ktor.views.*
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
@@ -39,6 +38,16 @@ fun Application.setupRoutes() = routing {
             }
             pageContent {
                 insert(Editor(snips, call.session?.username)) {}
+            }
+        }
+    }
+
+    //about, 5xx, 4xx
+
+    get("/about") {
+        call.respondHtmlTemplate(PageTemplate("Snipster", call.session?.username, call.session?.displayName)) {
+            pageContent {
+                insert(About()) {}
             }
         }
     }

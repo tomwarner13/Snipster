@@ -20,8 +20,8 @@ class PageTemplate(private val pageHeader: String, private val username: String?
             styleLink("/css/ohsnap.css")
             styleLink("/fa/css/all.css")
             if(!isLoggedIn) {
-                styleLink("https://global.oktacdn.com/okta-signin-widget/5.5.0/css/okta-sign-in.min.css")
-                script(src = "https://global.oktacdn.com/okta-signin-widget/5.5.0/js/okta-sign-in.min.js") {}
+                styleLink("https://global.oktacdn.com/okta-signin-widget/5.5.1/css/okta-sign-in.min.css")
+                script(src = "https://global.oktacdn.com/okta-signin-widget/5.5.1/js/okta-sign-in.min.js") {}
             }
             script(src = "https://code.jquery.com/jquery-3.5.1.min.js") {
                 attributes["integrity"] = "sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
@@ -105,7 +105,7 @@ class PageTemplate(private val pageHeader: String, private val username: String?
                     unsafe {
                         raw("""
                             let signIn = new OktaSignIn({
-                                baseUrl: '${oktaConfig.orgUrl}',
+                                baseUrl: '${oktaConfig.oktaHost}',
                                 el: '#oktaLoginContainer',
                                 clientId: '${oktaConfig.clientId}',
                                 redirectUri: '${oktaConfig.host}/login/authorization-callback',
@@ -117,7 +117,8 @@ class PageTemplate(private val pageHeader: String, private val username: String?
                                   nonce: null
                                 },
                                 features: {
-                                  registration: true
+                                  registration: true,
+                                  rememberMe: true
                                 }
                               }
                             );

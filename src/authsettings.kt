@@ -6,14 +6,16 @@ import io.ktor.config.*
 import io.ktor.http.*
 
 data class OktaConfig(
-    val orgUrl: String,
+    val oktaHost: String,
     val clientId: String,
     val clientSecret: String,
     val audience: String,
     val host: String
 ) {
-    val accessTokenUrl = "$orgUrl/v1/token"
-    val authorizeUrl = "$orgUrl/v1/authorize"
+    val orgUrl: String
+        get() = "$oktaHost/oauth2/default"
+    private val accessTokenUrl = "$orgUrl/v1/token"
+    private val authorizeUrl = "$orgUrl/v1/authorize"
     val logoutUrl = "$orgUrl/v1/logout"
 
     fun asOAuth2Config(): OAuthServerSettings.OAuth2ServerSettings =
@@ -26,14 +28,10 @@ data class OktaConfig(
             defaultScopes = listOf("openid", "profile"),
             requestMethod = HttpMethod.Post
         )
-
-    fun oktaHost() : String {
-        return orgUrl.replace("/oauth2/default", "")
-    }
 }
 
 fun oktaConfigReader(config: Config): OktaConfig = OktaConfig(
-    orgUrl = config.getString("okta.orgUrl"),
+    oktaHost = config.getString("okta.oktaHost"),
     clientId = config.getString("okta.clientId"),
     clientSecret = config.getString("okta.clientSecret"),
     audience = config.tryGetString("okta.audience") ?: "api://default",
