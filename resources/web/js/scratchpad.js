@@ -195,7 +195,7 @@ function loadActive(id) {
     if(id === snip.id) return; //current snip already active, no-op
     snip = snips["" + id];
     updateEditorContents(snip.title, snip.content);
-    closeAction = () => connectSocket(1);
+    closeAction = () => connectSocket(1); //TODO is this necessary anymore? may be ok to just leave socket connected
     socket.close();
 }
 
@@ -256,8 +256,13 @@ const editSnipDebounced = debounce(() => editSnip(), 500);
 function fixSignOnWidget() {
     $('.okta-sign-in-header').hide();
     $('.okta-form-title').hide();
-    //let createAccountLinkHtml = `<div class="o-form-button-bar"><a id="okta-signin-create" href="${oktaHost}/signin/register" class="btn btn-primary button button-primary align-middle">Create Account</a></div>`;
-    //$('.o-form-button-bar').after(createAccountLinkHtml);
+}
+
+window.onbeforeunload = () => {
+    if(socketIsConnected) {
+        closeAction = () => { };
+        socket.close();
+    }
 }
 
 $(() => { //initialize components on document.ready

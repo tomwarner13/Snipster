@@ -79,7 +79,7 @@ fun Application.setupAuth() {
             val redirectLogout = when (idToken) {
                 null -> "/"
                 else -> URLBuilder(oktaConfig.logoutUrl).run {
-                    parameters.append("post_logout_redirect_uri", host)
+                    parameters.append("post_logout_redirect_uri", "$host/logout") //redirect back through logout callback with empty token, that will redirect to /
                     parameters.append("id_token_hint", idToken)
                     buildString()
                 }
