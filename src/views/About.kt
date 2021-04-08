@@ -25,7 +25,7 @@ class About : Template<FlowContent> {
                     p {
                         +"If you insist! My Venmo link is @Tom-Warner-1, you can PayPal me through the email posted on my "
                         a("https://github.com/tomwarner13") { +"Github" }
-                        +", or you can email it directly for alternative arrangements (crypto etc)."
+                        +", or you can email it directly for alternative arrangements (crypto etc). Patreon is coming soon!"
                     }
                 }
             }
