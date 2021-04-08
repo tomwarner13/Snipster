@@ -41,6 +41,11 @@ class PageTemplate(private val pageHeader: String, private val username: String?
             link(rel="mask-icon", href="/safari-pinned-tab.svg") { attributes["color"]="#5bbad5" }
             meta(name="msapplication-TileColor", content = "#da532c")
             meta(name="theme-color", content = "#ffffff")
+            style {
+                unsafe {
+                    raw(".dropdown-menu[data-bs-popper] { left: unset !important; }") //fixes dumb bootstrap bug dragging dropdowns all the way to the left idk
+                }
+            }
             insert(headerContent)
         }
         body("d-flex flex-column h-100") {
@@ -50,9 +55,20 @@ class PageTemplate(private val pageHeader: String, private val username: String?
                         a(href = "/", classes = "font-weight-bold navbar-brand") {
                             +"📝 Snipster"
                         }
+                        a("#", classes = "navbar-brand dropdown-toggle me-auto") {
+                            attributes["data-bs-toggle"] = "dropdown"
+                            role="button"
+                        }
+                        ul("dropdown-menu") {
+                            li {
+                                a("/about", classes="dropdown-item") {
+                                    +"About"
+                                }
+                            }
+                        }
                         div("navbar-nav flex-row") {
                             if (isLoggedIn) {
-                                a(href = "/${username}", classes = "nav-link mx-2") { //TODO can this link to settings for the user? or just remove the <a>
+                                a(href = "#", classes = "nav-link mx-2") { //TODO can this link to settings for the user? or just remove the <a>
                                     +"Hello, $displayName"
                                 }
                                 a(href = "/logout", classes = "nav-link mx-2") {

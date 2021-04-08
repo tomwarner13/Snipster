@@ -45,7 +45,7 @@ fun Application.setupRoutes() = routing {
     //about, 5xx, 4xx
 
     get("/about") {
-        call.respondHtmlTemplate(PageTemplate("Snipster", call.session?.username, call.session?.displayName)) {
+        call.respondHtmlTemplate(PageTemplate("About Snipster", call.session?.username, call.session?.displayName)) {
             pageContent {
                 insert(About()) {}
             }
