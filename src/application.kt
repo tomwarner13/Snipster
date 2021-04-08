@@ -6,10 +6,16 @@ import com.okta.demo.ktor.database.ConnectionSettings
 import com.okta.demo.ktor.database.DatabaseConnection
 import com.okta.demo.ktor.database.SnipRepository
 import com.okta.demo.ktor.server.SnipServer
+import com.okta.demo.ktor.views.Editor
+import com.okta.demo.ktor.views.NotFound
+import com.okta.demo.ktor.views.PageTemplate
+import com.okta.demo.ktor.views.ServerError
 import com.typesafe.config.ConfigFactory
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.gson.*
+import io.ktor.html.*
+import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.request.*
 import io.ktor.sessions.*
@@ -40,6 +46,25 @@ fun Application.module() {
 
     // Respond for HEAD verb
     install(AutoHeadResponse)
+
+    //automatic responses on error status
+    install(StatusPages) {
+        status(HttpStatusCode.NotFound) {
+            call.respondHtmlTemplate(PageTemplate("Page Not Found", call.session?.username, call.session?.displayName)) {
+                pageContent {
+                    insert(NotFound(call.request.path())) {}
+                }
+            }
+        }
+        status(HttpStatusCode.InternalServerError) {
+            call.respondHtmlTemplate(PageTemplate("Server Error", call.session?.username, call.session?.displayName)) {
+                val status = call.response.status() ?: HttpStatusCode.InternalServerError
+                pageContent {
+                    insert(ServerError(call.request.path(), status)) {}
+                }
+            }
+        }
+    }
 
     // Load each request
     install(CallLogging) {

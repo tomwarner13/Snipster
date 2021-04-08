@@ -42,8 +42,6 @@ fun Application.setupRoutes() = routing {
         }
     }
 
-    //about, 5xx, 4xx
-
     get("/about") {
         call.respondHtmlTemplate(PageTemplate("About Snipster", call.session?.username, call.session?.displayName)) {
             pageContent {
@@ -51,6 +49,8 @@ fun Application.setupRoutes() = routing {
             }
         }
     }
+
+    //404, 5xx generic pages, user settings page? dark mode with cool hacker text?
 
     get("/snips") {
         val username = checkUsername(call)
@@ -95,7 +95,6 @@ fun Application.setupRoutes() = routing {
         try {
             incoming.consumeEach { frame ->
                 // Frames can be [Text], [Binary], [Ping], [Pong], [Close].
-                // We are only interested in textual messages, so we filter it.
                 if (frame is Frame.Text) {
                     // only worry about text frames for now
                     val gson = Gson()
