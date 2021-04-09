@@ -40,8 +40,8 @@ fun Application.module() {
     // We use sessions stored in signed cookies
     install(Sessions) {
         cookie<UserSession>("MY_SESSION") {
-            val secretEncryptKey = hex("00112233445566778899aabbccddeeff") //TODO this should probably not be in source control wtf
-            val secretAuthKey = hex("02030405060708090a0b0c")
+            val secretEncryptKey = hex(appConfig.sessionEncryptionConfig.encryptionKey)
+            val secretAuthKey = hex(appConfig.sessionEncryptionConfig.authKey)
             cookie.extensions["SameSite"] = "lax"
             cookie.httpOnly = true
             transform(SessionTransportTransformerEncrypt(secretEncryptKey, secretAuthKey))

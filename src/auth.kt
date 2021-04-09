@@ -74,7 +74,6 @@ fun Application.setupAuth() {
         }
 
         get("/logout") {
-            log.debug("entered logout code")
             val idToken = call.session?.idToken
 
             call.sessions.clear<UserSession>()

@@ -6,7 +6,8 @@ data class AppConfig(
     val oktaConfig: OktaConfig,
     val envType: EnvType,
     val host: String,
-    val databaseConfig: DatabaseConfig
+    val databaseConfig: DatabaseConfig,
+    val sessionEncryptionConfig: SessionEncryptionConfig
 ) {
     companion object {
         fun from(config: Config) : AppConfig = AppConfig(
@@ -16,6 +17,10 @@ data class AppConfig(
             databaseConfig = DatabaseConfig(
                 config.getString("database.url"),
                 config.getString("database.driver")
+            ),
+            sessionEncryptionConfig = SessionEncryptionConfig(
+                config.getString("encryption.encryptKey"),
+                config.getString("encryption.authKey")
             )
         )
     }
