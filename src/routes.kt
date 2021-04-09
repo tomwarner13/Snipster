@@ -1,12 +1,15 @@
 package com.okta.demo.ktor
 
 import com.google.gson.Gson
+import com.okta.demo.ktor.config.AppConfig
 import com.okta.demo.ktor.database.SnipRepository
-import com.okta.demo.ktor.views.PageTemplate
 import com.okta.demo.ktor.schema.SnipDc
 import com.okta.demo.ktor.server.SnipServer
 import com.okta.demo.ktor.server.SnipUserSession
-import com.okta.demo.ktor.views.*
+import com.okta.demo.ktor.views.About
+import com.okta.demo.ktor.views.Editor
+import com.okta.demo.ktor.views.PageTemplate
+import com.okta.demo.ktor.views.editorSpecificHeaders
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
@@ -24,6 +27,7 @@ fun Application.setupRoutes() = routing {
     val di = di()
     val repo by di.instance<SnipRepository>()
     val server by di.instance<SnipServer>()
+    val appConfig by di.instance<AppConfig>()
 
     fun checkUsername(call: ApplicationCall) : String {
         return call.session?.username ?: throw SecurityException("must be logged in")
@@ -32,7 +36,7 @@ fun Application.setupRoutes() = routing {
     get("/") {
         val snips = Editor.getSnipsForUser(di, call.session?.username)
 
-        call.respondHtmlTemplate(PageTemplate("Snipster", call.session?.username, call.session?.displayName)) {
+        call.respondHtmlTemplate(PageTemplate(appConfig, "Snipster", call.session?.username, call.session?.displayName)) {
             headerContent {
                 editorSpecificHeaders(snips, call.session?.username)
             }
@@ -43,7 +47,7 @@ fun Application.setupRoutes() = routing {
     }
 
     get("/about") {
-        call.respondHtmlTemplate(PageTemplate("About Snipster", call.session?.username, call.session?.displayName)) {
+        call.respondHtmlTemplate(PageTemplate(appConfig, "About Snipster", call.session?.username, call.session?.displayName)) {
             pageContent {
                 insert(About()) {}
             }

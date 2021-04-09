@@ -1,4 +1,4 @@
-package com.okta.demo.ktor
+package com.okta.demo.ktor.config
 
 import com.typesafe.config.Config
 import io.ktor.auth.*
@@ -9,8 +9,7 @@ data class OktaConfig(
     val oktaHost: String,
     val clientId: String,
     val clientSecret: String,
-    val audience: String,
-    val host: String
+    val audience: String
 ) {
     val orgUrl: String
         get() = "$oktaHost/oauth2/default"
@@ -28,12 +27,13 @@ data class OktaConfig(
             defaultScopes = listOf("openid", "profile"),
             requestMethod = HttpMethod.Post
         )
-}
 
-fun oktaConfigReader(config: Config): OktaConfig = OktaConfig(
-    oktaHost = config.getString("okta.oktaHost"),
-    clientId = config.getString("okta.clientId"),
-    clientSecret = config.getString("okta.clientSecret"),
-    audience = config.tryGetString("okta.audience") ?: "api://default",
-    host = config.getString("global.host"),
-)
+    companion object {
+        fun oktaConfigReader(config: Config): OktaConfig = OktaConfig(
+            oktaHost = config.getString("okta.oktaHost"),
+            clientId = config.getString("okta.clientId"),
+            clientSecret = config.getString("okta.clientSecret"),
+            audience = config.tryGetString("okta.audience") ?: "api://default"
+        )
+    }
+}

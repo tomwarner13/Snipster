@@ -1,7 +1,8 @@
 package com.okta.demo.ktor
 
+import com.okta.demo.ktor.config.AppConfig
+import com.okta.demo.ktor.schema.UserSession
 import com.okta.jwt.JwtVerifiers
-import com.typesafe.config.ConfigFactory
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.client.*
@@ -9,15 +10,19 @@ import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
-import java.lang.Exception
+import org.kodein.di.instance
+import org.kodein.di.ktor.di
 
 
 fun Application.setupAuth() {
-    val oktaConfig = oktaConfigReader(ConfigFactory.load() ?: throw Exception("Failed to load okta config"))
+    val di = di()
+    val appConfig by di.instance<AppConfig>()
+    val oktaConfig = appConfig.oktaConfig
+    val host = appConfig.host
 
     install(Authentication) {
         oauth {
-            urlProvider = { "${oktaConfig.host}/login/authorization-callback" }
+            urlProvider = { "${host}/login/authorization-callback" }
             providerLookup = { oktaConfig.asOAuth2Config() }
             client = HttpClient()
         }
@@ -32,8 +37,6 @@ fun Application.setupAuth() {
         .setClientId(oktaConfig.clientId)
         .setIssuer(oktaConfig.orgUrl)
         .build()
-
-    val host = oktaConfig.host
 
     routing {
         authenticate {
@@ -71,7 +74,6 @@ fun Application.setupAuth() {
         }
 
         get("/logout") {
-            log.debug("entered logout code")
             val idToken = call.session?.idToken
 
             call.sessions.clear<UserSession>()
