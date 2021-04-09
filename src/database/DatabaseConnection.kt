@@ -1,6 +1,6 @@
 package com.okta.demo.ktor.database
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
 
 //idea here is to just have a connection available for other classes to use
 class DatabaseConnection(private val settings: ConnectionSettings) {

@@ -1,14 +1,12 @@
 package com.okta.demo.ktor.views
 
-import com.okta.demo.ktor.oktaConfigReader
-import com.typesafe.config.ConfigFactory
+import com.okta.demo.ktor.config.AppConfig
 import io.ktor.html.*
 import kotlinx.html.*
-import java.lang.Exception
 
-class PageTemplate(private val pageHeader: String, private val username: String? = null, private val displayName: String? = null) : Template<HTML> {
+class PageTemplate(private val appConfig: AppConfig, private val pageHeader: String, private val username: String? = null, private val displayName: String? = null) : Template<HTML> {
     private val isLoggedIn = username != null
-    private val oktaConfig = oktaConfigReader(ConfigFactory.load() ?: throw Exception("Failed to load okta config"))
+    private val oktaConfig = appConfig.oktaConfig
 
     val headerContent = Placeholder<HEAD>()
     val pageContent = Placeholder<FlowContent>()
@@ -124,7 +122,7 @@ class PageTemplate(private val pageHeader: String, private val username: String?
                                 baseUrl: '${oktaConfig.oktaHost}',
                                 el: '#oktaLoginContainer',
                                 clientId: '${oktaConfig.clientId}',
-                                redirectUri: '${oktaConfig.host}/login/authorization-callback',
+                                redirectUri: '${appConfig.host}/login/authorization-callback',
                                 authParams: {
                                   scopes: ['openid', 'email', 'profile'],
                                   issuer: '${oktaConfig.orgUrl}',
