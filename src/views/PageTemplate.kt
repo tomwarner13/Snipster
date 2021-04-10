@@ -133,6 +133,12 @@ class PageTemplate(private val appConfig: AppConfig, private val pageHeader: Str
                                 features: {
                                   registration: true,
                                   rememberMe: true
+                                },
+                                i18n: {
+                                  'en': {
+                                    'primaryauth.username.placeholder': 'Email Address',
+                                    'primaryauth.username.tooltip': 'Your email address is your username.'
+                                  }
                                 }
                               }
                             );
