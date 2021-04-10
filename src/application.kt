@@ -70,11 +70,6 @@ fun Application.module() {
         }
     }
 
-    //always force HTTPS on live (non-local)
-    if(appConfig.envType != EnvType.Local) {
-        //install(HttpsRedirect)
-    }
-
     // Load each request
     install(CallLogging) {
         level = Level.INFO
