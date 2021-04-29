@@ -6,10 +6,7 @@ import com.okta.demo.ktor.database.SnipRepository
 import com.okta.demo.ktor.schema.SnipDc
 import com.okta.demo.ktor.server.SnipServer
 import com.okta.demo.ktor.server.SnipUserSession
-import com.okta.demo.ktor.views.About
-import com.okta.demo.ktor.views.Editor
-import com.okta.demo.ktor.views.PageTemplate
-import com.okta.demo.ktor.views.editorSpecificHeaders
+import com.okta.demo.ktor.views.*
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
@@ -42,6 +39,19 @@ fun Application.setupRoutes() = routing {
             }
             pageContent {
                 insert(Editor(snips, call.session?.username)) {}
+            }
+        }
+    }
+
+    get("/jar") {
+        val snips = CodeJarEditor.getSnipsForUser(di, call.session?.username)
+
+        call.respondHtmlTemplate(PageTemplate(appConfig, "Snipster", call.session?.username, call.session?.displayName)) {
+            headerContent {
+                codeJareditorSpecificHeaders(snips, call.session?.username)
+            }
+            pageContent {
+                insert(CodeJarEditor(snips, call.session?.username)) {}
             }
         }
     }
