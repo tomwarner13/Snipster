@@ -6,6 +6,8 @@ let changesQueued = false;
 let closeAction = () => { };
 let shouldClickToNewTab = false;
 
+import {CodeJar} from 'https://medv.io/codejar/codejar.js';
+
 const debounce = (callback, wait) => {
   let timeoutId = null;
   return (...args) => {
@@ -254,7 +256,7 @@ function connectSocket(retryTimeout) {
 const editSnipDebounced = debounce(() => editSnip(), 500);
 
 function fixSignOnWidget() {
-    $('.okta-sign-in-header').hide();
+    $('.okta-sign-in-header').hide(); //TODO just move to common stylesheet lmao come on
     $('.okta-form-title').hide();
 }
 
@@ -275,7 +277,8 @@ $(() => { //initialize components on document.ready
         snips = {"0": snip};
     }
 
-    loadFlask();
+    //loadFlask();
+    let jar = CodeJar(document.querySelector('.editor'), Prism.highlightElement);
     if(!isLoggedIn) fixSignOnWidget();
     updateEditorContents(snip.title, snip.content);
     initializeKeyListeners();

@@ -110,7 +110,7 @@ class CodeJarEditor(private val snips: Map<Int, SnipDc>, username: String? = nul
                     }
                 }
             }
-            div("codeflask col-lg-8 col-xs-12 border container px-0")
+            div("editor col-lg-8 col-xs-12 border container px-0")
         }
     }
 
@@ -135,8 +135,15 @@ fun HEAD.codeJareditorSpecificHeaders(snips: Map<Int, SnipDc>, username: String?
     """
     else "";
 
-    script(src = "https://unpkg.com/codeflask/build/codeflask.min.js") {}
-    script(src = "/js/jar-scratchpad.js") {}
+    //script(src = "https://unpkg.com/codeflask/build/codeflask.min.js") {}
+//    script(type="module") {
+//        unsafe {
+//            raw("import {CodeJar} from 'https://medv.io/codejar/codejar.js';")
+//        }
+//    }
+    //script(type="module", src = "https://medv.io/codejar/codejar.js") {}
+    script(src = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/prism.min.js") {}
+    script(type="module", src = "/js/jar-scratchpad.js") {}
     script {
         unsafe {
             raw("""
@@ -149,10 +156,7 @@ fun HEAD.codeJareditorSpecificHeaders(snips: Map<Int, SnipDc>, username: String?
     }
     style {
         unsafe {
-            raw(".codeflask { max-height: 750px }\n")
-            raw(".control-hidden { display: none }\n")
-            raw("pre { white-space: pre-wrap !important }\n") //allow lines to word wrap in the editor
-            raw(".codeflask__flatten { overflow-x: hidden !important }\n") //no horizontal scroll bar on editor text
+            raw(".control-hidden { display: none }")
         }
     } //TODO move to common stylesheet?
 }
