@@ -110,7 +110,7 @@ class CodeJarEditor(private val snips: Map<Int, SnipDc>, username: String? = nul
                     }
                 }
             }
-            div("editor col-lg-8 col-xs-12 border container px-0")
+            div("col-lg-8 col-xs-12 border container px-0 code language-js") { id = "editor" } //may have to be a <code> element and/or have a lang-xxxx class, see Prism docs
         }
     }
 
@@ -135,8 +135,10 @@ fun HEAD.codeJareditorSpecificHeaders(snips: Map<Int, SnipDc>, username: String?
     """
     else "";
 
-    script(src = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/prism.min.js") {}
-    script(src = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js") {}
+    //script(src = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/prism.min.js") {}
+    // script(src = "https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/prism.min.js") {}
+    // script(src = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js") {}
+    script(type="module", src = "/js/prism.js") {}
     script(type="module", src = "/js/jar-scratchpad.js") {}
     script {
         unsafe {
@@ -148,7 +150,9 @@ fun HEAD.codeJareditorSpecificHeaders(snips: Map<Int, SnipDc>, username: String?
                     """)
         }
     }
-    styleLink("https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/styles/dracula.min.css")
+    //styleLink("https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/styles/dracula.min.css")
+    // styleLink("https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/themes/prism-dark.min.css")
+    styleLink("/css/prism.css")
     style {
         unsafe {
             raw(".control-hidden { display: none }")
