@@ -110,7 +110,7 @@ class CodeJarEditor(private val snips: Map<Int, SnipDc>, username: String? = nul
                     }
                 }
             }
-            div("col-lg-8 col-xs-12 border container px-0 code language-js") { id = "editor" } //may have to be a <code> element and/or have a lang-xxxx class, see Prism docs
+            div("col-lg-8 col-xs-12 border container px-0 code language-markdown") { id = "editor" } //may have to be a <code> element and/or have a lang-xxxx class, see Prism docs
         }
     }
 
