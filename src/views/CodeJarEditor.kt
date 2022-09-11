@@ -8,7 +8,7 @@ import kotlinx.html.*
 import org.kodein.di.LazyDI
 import org.kodein.di.instance
 
-class Editor(private val snips: Map<Int, SnipDc>, username: String? = null) : Template<FlowContent> {
+class CodeJarEditor(private val snips: Map<Int, SnipDc>, username: String? = null) : Template<FlowContent> {
     private val isLoggedIn = username != null
 
     override fun FlowContent.apply() {
@@ -110,7 +110,10 @@ class Editor(private val snips: Map<Int, SnipDc>, username: String? = null) : Te
                     }
                 }
             }
-            div("codeflask col-lg-8 col-xs-12 border container px-0")
+            pre {
+                id = "editor"
+                code("col-lg-8 col-xs-12 container px-0 code language-markdown")
+            }
         }
     }
 
@@ -125,7 +128,7 @@ class Editor(private val snips: Map<Int, SnipDc>, username: String? = null) : Te
 }
 
 
-fun HEAD.editorSpecificHeaders(snips: Map<Int, SnipDc>, username: String? = null) {
+fun HEAD.codeJareditorSpecificHeaders(snips: Map<Int, SnipDc>, username: String? = null) {
     val isLoggedIn = username != null
 
     val snipsJson = "let snips = " + Gson().toJson(snips) + ";"
@@ -135,8 +138,8 @@ fun HEAD.editorSpecificHeaders(snips: Map<Int, SnipDc>, username: String? = null
     """
     else "";
 
-    script(src = "https://unpkg.com/codeflask/build/codeflask.min.js") {}
-    script(src = "/js/scratchpad.js") {}
+    script(type="module", src = "/js/prism.js") {}
+    script(type="module", src = "/js/jar-scratchpad.js") {}
     script {
         unsafe {
             raw("""
@@ -147,12 +150,10 @@ fun HEAD.editorSpecificHeaders(snips: Map<Int, SnipDc>, username: String? = null
                     """)
         }
     }
+    styleLink("/css/prism.css")
     style {
         unsafe {
-            raw(".codeflask { max-height: 750px }\n")
-            raw(".control-hidden { display: none }\n")
-            raw("pre { white-space: pre-wrap !important }\n") //allow lines to word wrap in the editor
-            raw(".codeflask__flatten { overflow-x: hidden !important }\n") //no horizontal scroll bar on editor text
+            raw(".control-hidden { display: none }")
         }
     } //TODO move to common stylesheet?
 }

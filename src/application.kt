@@ -91,7 +91,6 @@ fun Application.module() {
     )
     val conn = DatabaseConnection(settings)
 
-    //can put all DI registrations in here
     di {
         bind<DatabaseConnection>() with singleton { conn }
         bind<SnipRepository>() with singleton { SnipRepository(this@module) }
