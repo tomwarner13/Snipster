@@ -112,7 +112,7 @@ class CodeJarEditor(private val snips: Map<Int, SnipDc>, username: String? = nul
             }
             pre {
                 id = "editor"
-                code("col-lg-8 col-xs-12 container px-0 code language-markdown") // { id = "editor" }
+                code("col-lg-8 col-xs-12 container px-0 code language-markdown")
             }
         }
     }
@@ -138,9 +138,6 @@ fun HEAD.codeJareditorSpecificHeaders(snips: Map<Int, SnipDc>, username: String?
     """
     else "";
 
-    //script(src = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/prism.min.js") {}
-    // script(src = "https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/prism.min.js") {}
-    // script(src = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js") {}
     script(type="module", src = "/js/prism.js") {}
     script(type="module", src = "/js/jar-scratchpad.js") {}
     script {
@@ -153,8 +150,6 @@ fun HEAD.codeJareditorSpecificHeaders(snips: Map<Int, SnipDc>, username: String?
                     """)
         }
     }
-    //styleLink("https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/styles/dracula.min.css")
-    // styleLink("https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/themes/prism-dark.min.css")
     styleLink("/css/prism.css")
     style {
         unsafe {
