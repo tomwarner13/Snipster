@@ -15,6 +15,7 @@ import {withLineNumbers} from 'https://cdn.jsdelivr.net/npm/codejar@3.4.0/linenu
 
 //import {Prism} from 'prismjs';
 //need to import prism and/or highlight here? don't think they're getting loaded in lol F
+//looks like may need to call HighlightElement on update too
 
 const debounce = (callback, wait) => {
   let timeoutId = null;
@@ -28,8 +29,12 @@ const debounce = (callback, wait) => {
 
 function loadJar() {
     const editor = document.querySelector('#editor');
-    // jar = CodeJar(editor, withLineNumbers(Prism.highlightElement));    
-    jar = CodeJar(editor, Prism.highlightElement);
+    jar = CodeJar(editor, withLineNumbers(Prism.highlightElement));    
+    // const logHighlight = (e) => {
+    //     console.log("highlighting");
+    //     Prism.highlightElement(e);
+    // };
+    // jar = CodeJar(editor, logHighlight);
     jar.onUpdate((data) => {
         //check if content has actually changed before firing anything
         if(snip.content !== data) {
