@@ -43,19 +43,6 @@ fun Application.setupRoutes() = routing {
         }
     }
 
-    get("/jar") {
-        val snips = CodeJarEditor.getSnipsForUser(di, call.session?.username)
-
-        call.respondHtmlTemplate(PageTemplate(appConfig, "Snipster", call.session?.username, call.session?.displayName)) {
-            headerContent {
-                codeJareditorSpecificHeaders(snips, call.session?.username)
-            }
-            pageContent {
-                insert(CodeJarEditor(snips, call.session?.username)) {}
-            }
-        }
-    }
-
     get("/about") {
         call.respondHtmlTemplate(PageTemplate(appConfig, "About Snipster", call.session?.username, call.session?.displayName)) {
             pageContent {

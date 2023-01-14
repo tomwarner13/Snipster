@@ -1,10 +1,13 @@
 let socket = null;
 let snip = {};
-let flask = {};
 let socketIsConnected = false;
 let changesQueued = false;
 let closeAction = () => { };
 let shouldClickToNewTab = false;
+let jar = {};
+
+import {CodeJar} from 'https://cdn.jsdelivr.net/npm/codejar@3.4.0/codejar.min.js';
+import {withLineNumbers} from 'https://cdn.jsdelivr.net/npm/codejar@3.4.0/linenumbers.js';
 
 const debounce = (callback, wait) => {
   let timeoutId = null;
@@ -16,10 +19,10 @@ const debounce = (callback, wait) => {
   };
 }
 
-function loadFlask() {
-    flask = new CodeFlask('.codeflask', { language: 'markup', lineNumbers: true, defaultTheme: false });
-    flask.addLanguage('markup', Prism.languages['markup']); //start plaintext? syntax highlighting later?
-    flask.onUpdate((data) => {
+function loadJar() {
+    const editor = document.querySelector('#editor');
+    jar = CodeJar(editor, withLineNumbers(Prism.highlightElement));
+    jar.onUpdate((data) => {
         //check if content has actually changed before firing anything
         if(snip.content !== data) {
             snip.content = data;
@@ -59,7 +62,7 @@ function onCreated(data) {
 }
 
 function onEdited(data) {
-    //check if active snip is getting edited, update flask if so
+    //check if active snip is getting edited, update editor if so
     if(data.id === snip.id) {
         if(data.title !== snip.title || data.content !== snip.content) {
             snip = data;
@@ -200,7 +203,7 @@ function loadActive(id) {
 }
 
 function updateEditorContents(title, content) {
-    flask.updateCode(content);
+    jar.updateCode(content);
 }
 
 function connectSocket(retryTimeout) {
@@ -254,7 +257,7 @@ function connectSocket(retryTimeout) {
 const editSnipDebounced = debounce(() => editSnip(), 500);
 
 function fixSignOnWidget() {
-    $('.okta-sign-in-header').hide();
+    $('.okta-sign-in-header').hide(); //TODO just move to common stylesheet lmao come on
     $('.okta-form-title').hide();
 }
 
@@ -268,15 +271,24 @@ window.onbeforeunload = () => {
 $(() => { //initialize components on document.ready
     if(isLoggedIn) {
         loadExistingSnip(Object.values(snips)[0]);
-        connectSocket(1); //TODO move to doc.ready?
+        connectSocket(1);
     } else {
         let tempContent = !!localStorage.getItem('content') ? localStorage.getItem('content') : defaultContent;
         snip = { title: "untitled", content: tempContent };
         snips = {"0": snip};
     }
 
-    loadFlask();
+    loadJar();
     if(!isLoggedIn) fixSignOnWidget();
     updateEditorContents(snip.title, snip.content);
     initializeKeyListeners();
 });
+
+//attach global functions to window object so DOM elements can call them
+window.loadActive = loadActive;
+window.createNewSnip = createNewSnip;
+window.renameDialog = renameDialog;
+window.deleteDialog = deleteDialog;
+window.renameSnip = renameSnip;
+window.resetControls = resetControls;
+window.deleteSnip = deleteSnip;
