@@ -261,6 +261,10 @@ function fixSignOnWidget() {
     $('.okta-form-title').hide();
 }
 
+function fixLineNumberTranslucence() {
+    $('.codejar-linenumbers').css({ "background-color": "#545454", "mix-blend-mode": "" });
+}
+
 window.onbeforeunload = () => {
     if(socketIsConnected) {
         closeAction = () => { };
@@ -280,6 +284,7 @@ $(() => { //initialize components on document.ready
 
     loadJar();
     if(!isLoggedIn) fixSignOnWidget();
+    fixLineNumberTranslucence();
     updateEditorContents(snip.title, snip.content);
     initializeKeyListeners();
 });
