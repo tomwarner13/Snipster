@@ -10,7 +10,7 @@ Currently [live in early open beta](https://snipster.live/)
 
 Installation: check out the code. Add a file to the root directory called ".env", fill with environment variables as necessary. See examples from existing environments. Sign into Heroku CLI account on machine.
 
-Starting up: from the root directory, run './gradlew build' and `./gradlew stage` to build and stage the project for Heroku, and then run the relevant command to start Heroku locally:
+Starting up: from the root directory, run `./gradlew build` and `./gradlew stage` to build and stage the project for Heroku, and then run the relevant command to start Heroku locally:
 
 - On Linux: `heroku local`
 - On Windows: `heroku local -f Procfile.windows`
