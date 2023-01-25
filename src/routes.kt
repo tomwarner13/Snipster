@@ -114,7 +114,8 @@ fun Application.setupRoutes() = routing {
             }
         }
         catch(e: Exception) {
-            log.error("websocket error! $e") //TODO literally any handling here
+            log.error("websocket error! $e")
+            throw e //TODO literally any handling here
         }
         finally {
             server.removeSession(session)
