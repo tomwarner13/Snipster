@@ -21,7 +21,17 @@ const debounce = (callback, wait) => {
 
 function loadJar() {
     const editor = document.querySelector('#editor');
-    jar = CodeJar(editor, withLineNumbers(Prism.highlightElement));
+
+    //make these dynamic and based off user/browser settings?
+    let jarOptions = { addClosing: false };
+    let loadLineNumbers = false;
+
+    if(loadLineNumbers) {
+        jar = CodeJar(editor, withLineNumbers(Prism.highlightElement), jarOptions);
+    } else {
+        jar = CodeJar(editor, Prism.highlightElement, jarOptions);
+    }
+
     jar.onUpdate((data) => {
         //check if content has actually changed before firing anything
         if(snip.content !== data) {

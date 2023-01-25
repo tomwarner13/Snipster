@@ -72,6 +72,7 @@ class PageTemplate(private val appConfig: AppConfig, private val pageHeader: Str
                             }
                             if (isLoggedIn) {
                                 a(href = "#", classes = "nav-link mx-2") { //TODO can this link to settings for the user? or just remove the <a>
+                                    i("fas fa-user-cog text-light")
                                     +"Hello, $displayName"
                                 }
                                 a(href = "/logout", classes = "nav-link mx-2") {
