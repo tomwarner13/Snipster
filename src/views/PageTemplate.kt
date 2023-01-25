@@ -39,8 +39,10 @@ class PageTemplate(private val appConfig: AppConfig, private val pageHeader: Str
             meta(name="theme-color", content = "#ffffff")
             style {
                 unsafe {
-                    //fixes dumb bootstrap bug dragging dropdowns all the way to the left idk, also hides connection lost icon
-                    raw(".dropdown-menu[data-bs-popper] { left: unset !important; }\n.connection-lost-container { display: none; padding: .5rem 1rem }")
+                    raw(".dropdown-menu[data-bs-popper] { left: unset !important; }\n" + //fixes dumb bootstrap bug dragging dropdowns all the way to the left idk
+                            ".connection-lost-container { display: none; padding: .5rem 1rem }\n" + //hides connection lost icon
+                            ".codejar-linenumbers { z-index: 2 }" //prevents scrolled text from "hovering" above line numbers in editor
+                    )
                 }
             }
             insert(headerContent)
