@@ -4,7 +4,7 @@ import com.okta.demo.ktor.config.AppConfig
 import io.ktor.html.*
 import kotlinx.html.*
 
-class PageTemplate(private val appConfig: AppConfig, private val pageHeader: String, private val username: String? = null, private val displayName: String? = null) : Template<HTML> {
+class PageTemplate(private val appConfig: AppConfig, private val pageHeader: String, username: String? = null, private val displayName: String? = null) : Template<HTML> {
     private val isLoggedIn = username != null
     private val oktaConfig = appConfig.oktaConfig
 
@@ -115,6 +115,16 @@ class PageTemplate(private val appConfig: AppConfig, private val pageHeader: Str
                                 div("modal-body") {
                                     div {
                                         id = "userSettingsForm"
+                                        //known settings so far:
+                                        //  addClosing on ', default to off, bool
+                                        //  line numbers vs word wrap, some kind of toggle
+                                        //  anything else?
+
+                                        //this will need:
+                                        //  a DB table with username as key
+                                        //  a fetch method to load the DB table
+                                        //  some way to communicate with the table and push change events -- use the socket?
+                                        //  theme and syntax highlighting eventually but that may not be at the user level
                                     }
                                 }
                             }
