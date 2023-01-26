@@ -33,6 +33,7 @@ class SnipRepository(private val application: Application) {
             result.add(createSnip(username, "untitled",""))
         }
         _cache.putObject("ownedSnips:$username", result.map { it.id }.toMutableSet())
+        //TODO this probably deserves some attention, i'm writing some stuff INTO the cache but mostly not, it appears, using it for anything
         return result
     }
 
