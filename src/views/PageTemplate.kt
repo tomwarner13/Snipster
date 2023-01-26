@@ -71,8 +71,10 @@ class PageTemplate(private val appConfig: AppConfig, private val pageHeader: Str
                                 i("fas fa-unlink text-danger")
                             }
                             if (isLoggedIn) {
-                                a(href = "#", classes = "nav-link mx-2") { //TODO can this link to settings for the user? or just remove the <a>
-                                    i("fas fa-user-cog text-light")
+                                a(classes = "nav-link mx-2") {
+                                    attributes["data-bs-toggle"] = "modal"
+                                    attributes["data-bs-target"] = "#settingsModal"
+                                    i("fas fa-user-cog text-light me-1")
                                     +"Hello, $displayName"
                                 }
                                 a(href = "/logout", classes = "nav-link mx-2") {
@@ -96,7 +98,29 @@ class PageTemplate(private val appConfig: AppConfig, private val pageHeader: Str
             }
             main("mt-3") {
                 insert(pageContent)
-                if(!isLoggedIn) {
+                if(isLoggedIn) {
+                    div("modal fade") {
+                        id = "settingsModal"
+                        div("modal-dialog") {
+                            div("modal-content") {
+                                div("modal-header") {
+                                    h5("modal-title") {
+                                        i("fas fa-user-cog me-1")
+                                        +"User Settings"
+                                    }
+                                    button(classes = "btn-close", type = ButtonType.button) {
+                                        attributes["data-bs-dismiss"] = "modal"
+                                    }
+                                }
+                                div("modal-body") {
+                                    div {
+                                        id = "userSettingsForm"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
                     div("modal fade") {
                         id = "loginModal"
                         div("modal-dialog") {
