@@ -82,7 +82,8 @@ fun Application.module() {
     }
 
     install(WebSockets) {
-        pingPeriod = Duration.ofMinutes(1)
+        //needs to be under the 55 second Heroku request timeout period to keep the connection alive
+        pingPeriod = Duration.ofSeconds(30)
     }
 
     val settings = ConnectionSettings(

@@ -230,6 +230,7 @@ function connectSocket(retryTimeout) {
 
     socket.onopen = function() { //handle filling snip if exists?
         socketIsConnected = true;
+        $('.connection-lost-container').hide();
         //if snip updates apply, send them? need to handle if changes on both ends lol
         if(changesQueued) {
             editSnip();
@@ -257,8 +258,7 @@ function connectSocket(retryTimeout) {
 
         console.log("socket closed:" + explanation);
         console.dir(event);
-        ohSnap("Connection closed! " + event.code + ": " + explanation, {color: 'red'});
-        ohSnap("Retrying in " + retryTimeout + " seconds", {color: 'yellow'});
+        $('.connection-lost-container').show();
         let newTimeout = Math.min(10, retryTimeout + 2); //bump up retry timeout by 2 seconds, up to max of 10
         setTimeout(connectSocket(newTimeout), retryTimeout * 1000);
     }
@@ -269,6 +269,10 @@ const editSnipDebounced = debounce(() => editSnip(), 500);
 function fixSignOnWidget() {
     $('.okta-sign-in-header').hide(); //TODO just move to common stylesheet lmao come on
     $('.okta-form-title').hide();
+}
+
+function fixLineNumberTranslucence() {
+    $('.codejar-linenumbers').css({ "background-color": "#545454", "mix-blend-mode": "" });
 }
 
 window.onbeforeunload = () => {
@@ -290,6 +294,7 @@ $(() => { //initialize components on document.ready
 
     loadJar();
     if(!isLoggedIn) fixSignOnWidget();
+    fixLineNumberTranslucence();
     updateEditorContents(snip.title, snip.content);
     initializeKeyListeners();
 });

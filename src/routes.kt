@@ -2,6 +2,7 @@ package com.okta.demo.ktor
 
 import com.google.gson.Gson
 import com.okta.demo.ktor.config.AppConfig
+import com.okta.demo.ktor.config.EnvType
 import com.okta.demo.ktor.database.SnipRepository
 import com.okta.demo.ktor.schema.SnipDc
 import com.okta.demo.ktor.server.SnipServer
@@ -30,10 +31,14 @@ fun Application.setupRoutes() = routing {
         return call.session?.username ?: throw SecurityException("must be logged in")
     }
 
+    fun buildPageHeader(title: String) : String {
+        return if (appConfig.envType == EnvType.Local) "$title (LOCAL)" else title;
+    }
+
     get("/") {
         val snips = Editor.getSnipsForUser(di, call.session?.username)
 
-        call.respondHtmlTemplate(PageTemplate(appConfig, "Snipster", call.session?.username, call.session?.displayName)) {
+        call.respondHtmlTemplate(PageTemplate(appConfig, buildPageHeader("Snipster"), call.session?.username, call.session?.displayName)) {
             headerContent {
                 editorSpecificHeaders(snips, call.session?.username)
             }
@@ -44,7 +49,7 @@ fun Application.setupRoutes() = routing {
     }
 
     get("/about") {
-        call.respondHtmlTemplate(PageTemplate(appConfig, "About Snipster", call.session?.username, call.session?.displayName)) {
+        call.respondHtmlTemplate(PageTemplate(appConfig, buildPageHeader("About Snipster"), call.session?.username, call.session?.displayName)) {
             pageContent {
                 insert(About()) {}
             }

@@ -15,7 +15,6 @@ class PageTemplate(private val appConfig: AppConfig, private val pageHeader: Str
         head {
             title { +pageHeader }
             styleLink("https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css")
-            styleLink("/css/ohsnap.css")
             styleLink("/fa/css/all.css")
             if(!isLoggedIn) {
                 styleLink("https://global.oktacdn.com/okta-signin-widget/5.5.1/css/okta-sign-in.min.css")
@@ -29,7 +28,6 @@ class PageTemplate(private val appConfig: AppConfig, private val pageHeader: Str
                 attributes["integrity"] = "sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
                 attributes["crossorigin"] = "anonymous"
             }
-            script(src = "/js/ohsnap.min.js") {}
             meta(name = "viewport", content = "width=device-width, initial-scale=1, shrink-to-fit=no")
             meta(charset = "utf-8")
             link(rel = "apple-touch-icon", href = "/apple-touch-icon.png") { sizes = "180x180" }
@@ -41,7 +39,10 @@ class PageTemplate(private val appConfig: AppConfig, private val pageHeader: Str
             meta(name="theme-color", content = "#ffffff")
             style {
                 unsafe {
-                    raw(".dropdown-menu[data-bs-popper] { left: unset !important; }") //fixes dumb bootstrap bug dragging dropdowns all the way to the left idk
+                    raw(".dropdown-menu[data-bs-popper] { left: unset !important; }\n" + //fixes dumb bootstrap bug dragging dropdowns all the way to the left idk
+                            ".connection-lost-container { display: none; padding: .5rem 1rem }\n" + //hides connection lost icon
+                            ".codejar-linenumbers { z-index: 2 }" //prevents scrolled text from "hovering" above line numbers in editor
+                    )
                 }
             }
             insert(headerContent)
@@ -65,6 +66,10 @@ class PageTemplate(private val appConfig: AppConfig, private val pageHeader: Str
                             }
                         }
                         div("navbar-nav flex-row") {
+                            span("connection-lost-container") {
+                                attributes["title"] = "Connection lost!"
+                                i("fas fa-unlink text-danger")
+                            }
                             if (isLoggedIn) {
                                 a(href = "#", classes = "nav-link mx-2") { //TODO can this link to settings for the user? or just remove the <a>
                                     i("fas fa-user-cog text-light")
@@ -91,7 +96,6 @@ class PageTemplate(private val appConfig: AppConfig, private val pageHeader: Str
             }
             main("mt-3") {
                 insert(pageContent)
-                div { id="ohsnap" }
                 if(!isLoggedIn) {
                     div("modal fade") {
                         id = "loginModal"
