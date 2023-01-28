@@ -7,6 +7,7 @@ import com.okta.demo.ktor.config.EnvType
 import com.okta.demo.ktor.database.ConnectionSettings
 import com.okta.demo.ktor.database.DatabaseConnection
 import com.okta.demo.ktor.database.SnipRepository
+import com.okta.demo.ktor.database.UserSettingsRepository
 import com.okta.demo.ktor.schema.UserSession
 import com.okta.demo.ktor.server.SnipServer
 import com.okta.demo.ktor.views.NotFound
@@ -95,6 +96,7 @@ fun Application.module() {
     di {
         bind<DatabaseConnection>() with singleton { conn }
         bind<SnipRepository>() with singleton { SnipRepository(this@module) }
+        bind<UserSettingsRepository>() with singleton { UserSettingsRepository(this@module) }
         bind<Logger>() with singleton { this@module.log }
         bind<SnipServer>() with singleton { SnipServer() }
         bind<CacheProvider>() with singleton { MemoryCacheProvider() }

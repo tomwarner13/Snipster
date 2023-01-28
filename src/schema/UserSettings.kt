@@ -31,4 +31,7 @@ data class UserSettingsDc(
     val username: String,
     val useLineNumbers: Boolean,
     val insertClosing: Boolean
-)
+) {
+    //use this to generate default settings
+    constructor(username: String) : this(username, false, false)
+}

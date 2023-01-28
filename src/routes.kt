@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.okta.demo.ktor.config.AppConfig
 import com.okta.demo.ktor.config.EnvType
 import com.okta.demo.ktor.database.SnipRepository
+import com.okta.demo.ktor.database.UserSettingsRepository
 import com.okta.demo.ktor.schema.SnipDc
 import com.okta.demo.ktor.server.SnipServer
 import com.okta.demo.ktor.server.SnipUserSession
@@ -18,12 +19,14 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.consumeEach
+import org.kodein.di.LazyDI
 import org.kodein.di.instance
 import org.kodein.di.ktor.di
 
 fun Application.setupRoutes() = routing {
     val di = di()
-    val repo by di.instance<SnipRepository>()
+    val snipRepo by di.instance<SnipRepository>()
+    val settingsRepo by di.instance<UserSettingsRepository>()
     val server by di.instance<SnipServer>()
     val appConfig by di.instance<AppConfig>()
 
@@ -35,8 +38,15 @@ fun Application.setupRoutes() = routing {
         return if (appConfig.envType == EnvType.Local) "$title (LOCAL)" else title;
     }
 
+    fun getSnipsForUser(di: LazyDI, username: String?) : Map<Int, SnipDc> {
+        if(username == null) return emptyMap()
+
+        val repository by di.instance<SnipRepository>()
+        return username.let { u -> repository.getSnipsByUser(u).map { it.id.value to it.toDc() }.toMap()}
+    }
+
     get("/") {
-        val snips = Editor.getSnipsForUser(di, call.session?.username)
+        val snips = getSnipsForUser(di, call.session?.username)
 
         call.respondHtmlTemplate(PageTemplate(appConfig, buildPageHeader("Snipster"), call.session?.username, call.session?.displayName)) {
             headerContent {
@@ -56,13 +66,15 @@ fun Application.setupRoutes() = routing {
         }
     }
 
-    //404, 5xx generic pages, user settings page? dark mode with cool hacker text?
-
     get("/snips") {
         val username = checkUsername(call)
-        log.debug("$username requesting all snips")
-        val result = repo.getSnipsByUser(username).map { it.toDc() } //fix DB call to create if none exists?
-        log.debug(result.toString())
+        val result = snipRepo.getSnipsByUser(username).map { it.toDc() } //fix DB call to create if none exists?
+        call.respond(HttpStatusCode.Found, result)
+    }
+
+    get("/settings") {
+        val username = checkUsername(call)
+        val result = settingsRepo.getUserSettings(username)
         call.respond(HttpStatusCode.Found, result)
     }
 
@@ -71,7 +83,7 @@ fun Application.setupRoutes() = routing {
         val snip = call.receive<SnipDc>()
         log.debug("$username creating snip:")
         log.debug(snip.toString())
-        val result = repo.createSnip(username, snip.title, snip.content).toDc()
+        val result = snipRepo.createSnip(username, snip.title, snip.content).toDc()
         call.respond(HttpStatusCode.Created, result)
     }
 
@@ -80,14 +92,14 @@ fun Application.setupRoutes() = routing {
         val snip = call.receive<SnipDc>() //do i want this? or just the fields used? will it work by just giving fields used?
         log.debug("$username editing snip:")
         log.debug(snip.toString())
-        repo.editSnip(snip)
+        snipRepo.editSnip(snip)
         call.respond(HttpStatusCode.NoContent)
     }
 
     delete("/snips/{id}") {
         val username = checkUsername(call)
         val id = call.parameters["id"]?.toInt() ?: throw SecurityException("snip ID required for deletion")
-        repo.deleteSnip(id, username)
+        snipRepo.deleteSnip(id, username)
         call.respond(HttpStatusCode.NoContent)
     }
 
@@ -109,7 +121,7 @@ fun Application.setupRoutes() = routing {
                     val snip = gson.fromJson(text, SnipDc::class.java)
                     snip.editingSessionId = session.sessionId
                     log.debug("updating snip " + snip.id)
-                    repo.editSnip(snip)
+                    snipRepo.editSnip(snip)
                 }
             }
         }

@@ -116,15 +116,6 @@ class Editor(private val snips: Map<Int, SnipDc>, username: String? = null) : Te
             }
         }
     }
-
-    companion object {
-        fun getSnipsForUser(di: LazyDI, username: String?) : Map<Int, SnipDc> {
-            if(username == null) return emptyMap()
-
-            val repository by di.instance<SnipRepository>()
-            return username.let { u -> repository.getSnipsByUser(u).map { it.id.value to it.toDc() }.toMap()}
-        }
-    }
 }
 
 
