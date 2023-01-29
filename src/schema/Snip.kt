@@ -1,4 +1,4 @@
-package com.okta.demo.ktor.schema
+package snipster.schema
 
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass

@@ -1,4 +1,4 @@
-package com.okta.demo.ktor.database
+package snipster.database
 
 data class ConnectionSettings(
     val url: String,

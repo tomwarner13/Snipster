@@ -10,7 +10,7 @@ plugins {
     kotlin("jvm") version "1.4.0"
 }
 
-group = "com.okta.demo.ktor"
+group = "snipster"
 version = "0.0.1"
 
 application {

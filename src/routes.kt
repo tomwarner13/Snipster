@@ -1,15 +1,15 @@
-package com.okta.demo.ktor
+package snipster
 
 import com.google.gson.Gson
-import com.okta.demo.ktor.config.AppConfig
-import com.okta.demo.ktor.config.EnvType
-import com.okta.demo.ktor.database.SnipRepository
-import com.okta.demo.ktor.database.UserSettingsRepository
-import com.okta.demo.ktor.schema.SnipDc
-import com.okta.demo.ktor.schema.UserSettingsDc
-import com.okta.demo.ktor.server.SnipServer
-import com.okta.demo.ktor.server.SnipUserSession
-import com.okta.demo.ktor.views.*
+import snipster.config.AppConfig
+import snipster.config.EnvType
+import snipster.database.SnipRepository
+import snipster.database.UserSettingsRepository
+import snipster.schema.SnipDc
+import snipster.schema.UserSettingsDc
+import snipster.server.SnipServer
+import snipster.server.SnipUserSession
+import snipster.views.*
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*

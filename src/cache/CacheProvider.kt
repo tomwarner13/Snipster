@@ -1,4 +1,4 @@
-package com.okta.demo.ktor.cache
+package snipster.cache
 
 interface CacheProvider { //might need to be CacheProvider<T>?
     fun<T : Any> putObject(key: String, value: T)

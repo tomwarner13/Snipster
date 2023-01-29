@@ -1,8 +1,8 @@
-package com.okta.demo.ktor.views
+package snipster.views
 
 import com.google.gson.Gson
-import com.okta.demo.ktor.database.SnipRepository
-import com.okta.demo.ktor.schema.SnipDc
+import snipster.database.SnipRepository
+import snipster.schema.SnipDc
 import io.ktor.html.*
 import kotlinx.html.*
 import org.kodein.di.LazyDI

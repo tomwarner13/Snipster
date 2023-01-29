@@ -1,4 +1,4 @@
-package com.okta.demo.ktor.cache
+package snipster.cache
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import java.time.Duration

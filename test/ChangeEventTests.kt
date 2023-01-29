@@ -1,5 +1,5 @@
-import com.okta.demo.ktor.helper.SnipChangeEvent
-import com.okta.demo.ktor.schema.ChangeType
+import snipster.helper.SnipChangeEvent
+import snipster.schema.ChangeType
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

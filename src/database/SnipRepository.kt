@@ -1,10 +1,10 @@
-package com.okta.demo.ktor.database
+package snipster.database
 
-import com.okta.demo.ktor.cache.CacheProvider
-import com.okta.demo.ktor.schema.Snip
-import com.okta.demo.ktor.schema.SnipDc
-import com.okta.demo.ktor.schema.Snips
-import com.okta.demo.ktor.server.SnipServer
+import snipster.cache.CacheProvider
+import snipster.schema.Snip
+import snipster.schema.SnipDc
+import snipster.schema.Snips
+import snipster.server.SnipServer
 import io.ktor.application.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SortOrder

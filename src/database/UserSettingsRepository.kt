@@ -1,9 +1,9 @@
-package com.okta.demo.ktor.database
+package snipster.database
 
-import com.okta.demo.ktor.schema.UserSettings
-import com.okta.demo.ktor.schema.UserSettingsDc
-import com.okta.demo.ktor.schema.UserSettingsTable
-import com.okta.demo.ktor.server.SnipServer
+import snipster.schema.UserSettings
+import snipster.schema.UserSettingsDc
+import snipster.schema.UserSettingsTable
+import snipster.server.SnipServer
 import io.ktor.application.*
 import org.jetbrains.exposed.sql.BooleanColumnType
 import org.jetbrains.exposed.sql.Database

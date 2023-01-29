@@ -1,4 +1,4 @@
-package com.okta.demo.ktor.views
+package snipster.views
 
 import io.ktor.html.*
 import io.ktor.http.*

@@ -1,4 +1,4 @@
-package com.okta.demo.ktor.config
+package snipster.config
 
 import com.typesafe.config.Config
 import io.ktor.auth.*

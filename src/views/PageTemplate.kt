@@ -1,6 +1,6 @@
-package com.okta.demo.ktor.views
+package snipster.views
 
-import com.okta.demo.ktor.config.AppConfig
+import snipster.config.AppConfig
 import io.ktor.html.*
 import kotlinx.html.*
 
