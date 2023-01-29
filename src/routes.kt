@@ -6,6 +6,7 @@ import com.okta.demo.ktor.config.EnvType
 import com.okta.demo.ktor.database.SnipRepository
 import com.okta.demo.ktor.database.UserSettingsRepository
 import com.okta.demo.ktor.schema.SnipDc
+import com.okta.demo.ktor.schema.UserSettingsDc
 import com.okta.demo.ktor.server.SnipServer
 import com.okta.demo.ktor.server.SnipUserSession
 import com.okta.demo.ktor.views.*
@@ -76,6 +77,13 @@ fun Application.setupRoutes() = routing {
         val username = checkUsername(call)
         val result = settingsRepo.getUserSettings(username)
         call.respond(HttpStatusCode.Found, result)
+    }
+
+    get("/settings/update") {
+        val username = checkUsername(call)
+        var settings = UserSettingsDc(username, true, false)
+        val result = settingsRepo.saveUserSettings(settings)
+        call.respond(HttpStatusCode.NoContent)
     }
 
     post("/snips") {
