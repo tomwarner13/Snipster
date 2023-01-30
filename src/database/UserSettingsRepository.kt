@@ -36,9 +36,8 @@ class UserSettingsRepository(private val application: Application) {
         transaction {
             val conn = TransactionManager.current().connection
 
-            val query = """
-                INSERT INTO user_settings (username, use_line_numbers, insert_closing) VALUES (?, ?, ?) ON CONFLICT (username) DO UPDATE SET use_line_numbers=?, insert_closing = ?;
-            """.trimIndent()
+            val query =
+                "INSERT INTO user_settings (username, use_line_numbers, insert_closing) VALUES (?, ?, ?) ON CONFLICT (username) DO UPDATE SET use_line_numbers=?, insert_closing = ?;"
             val statement = conn.prepareStatement(query, false)
 
             statement.fillParameters(listOf( //WOW IF ONLY THERE WERE A WAY TO NAME AND LABEL PARAMETERS

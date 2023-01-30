@@ -79,6 +79,14 @@ fun Application.setupRoutes() = routing {
         call.respond(HttpStatusCode.Found, result)
     }
 
+    put("/settings") {
+        val username = checkUsername(call)
+        val settings = call.receive<UserSettingsDc>()
+        if(settings.username != username) throw SecurityException("Cannot modify settings for another user")
+        val result = settingsRepo.saveUserSettings(settings)
+        call.respond(HttpStatusCode.Accepted, result)
+    }
+
     get("/settings/update") {
         val username = checkUsername(call)
         var settings = UserSettingsDc(username, true, false)
