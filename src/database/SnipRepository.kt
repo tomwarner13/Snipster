@@ -17,16 +17,12 @@ import org.kodein.di.ktor.di
 import org.slf4j.Logger
 import java.util.*
 
-class SnipRepository(private val application: Application) {
-    private val _conn by di{application}.instance<DatabaseConnection>()
-    private val _server by di{application}.instance<SnipServer>()
-    private val _db : Database = _conn.db //not using these? or requires initialization and this is kind of a hack?
+class SnipRepository(private val application: Application) : DatabaseBase(application) {
     private val _cache by di{application}.instance<CacheProvider>()
-    private val _logger by di{application}.instance<Logger>()
 
-    fun getSnipsByUser(username: String) : List<Snip> { //maybe change return type to the native iterator thing for callers to use?
+    suspend fun getSnipsByUser(username: String) : List<Snip> { //maybe change return type to the native iterator thing for callers to use?
         val result = mutableListOf<Snip>()
-        transaction {
+        dbExec {
             result.addAll(Snip.find { Snips.username eq username }.orderBy(Snips.createdOn to SortOrder.ASC) )
         }
         if(result.isEmpty()) {
@@ -36,7 +32,7 @@ class SnipRepository(private val application: Application) {
         //TODO this probably deserves some attention, i'm writing some stuff INTO the cache but mostly not, it appears, using it for anything
         return result
     }
-
+/*
     fun getOwnedSnips(username: String) : MutableSet<Int> {
         return _cache.getOrFetchObject("ownedSnips:$username") {
             return@getOrFetchObject transaction {
@@ -44,15 +40,24 @@ class SnipRepository(private val application: Application) {
             }
         }
     }
+ */
 
-    fun getSnip(id: Int) : Snip { //does this work correctly when snip no exist?
-        return transaction {
+    suspend fun getOwnedSnips(username: String) : MutableSet<Int> {
+        return _cache.getOrFetchObjectAsync("ownedSnips:$username") {
+            return@getOrFetchObjectAsync transaction {
+                return@transaction Snip.find { Snips.username eq username }.map { it.id.value }.toMutableSet()
+            }
+        }
+    }
+
+    suspend fun getSnip(id: Int) : Snip { //does this work correctly when snip no exist?
+        return dbExec {
             Snip[id]
         }
     }
 
-    fun createSnip(username: String, title: String, content: String): Snip {
-        return transaction {
+    suspend fun createSnip(username: String, title: String, content: String): Snip {
+        return dbExec {
             val result = Snip.new {
                 this.username = username
                 this.title = title
@@ -68,12 +73,12 @@ class SnipRepository(private val application: Application) {
 
             _server.snipCreated(result.toDc())
 
-            return@transaction result
+            return@dbExec result
         }
     }
 
-    fun editSnip(dc: SnipDc) {
-        transaction {
+    suspend fun editSnip(dc: SnipDc) {
+        dbExec {
             val snip = Snip[dc.id]
             if(snip.username != dc.username) throw SecurityException("Attempted to modify unowned snip!") //DEF UNIT TEST THIS
             snip.title = dc.title
@@ -84,8 +89,8 @@ class SnipRepository(private val application: Application) {
         _server.snipUpdated(dc)
     }
 
-    fun deleteSnip(id: Int, username: String) : Int { //or by ID and confirm user?
-        val recordsDeleted = transaction {
+    suspend fun deleteSnip(id: Int, username: String) : Int { //or by ID and confirm user?
+        val recordsDeleted = dbExec {
             Snips.deleteWhere { Snips.id eq id and (Snips.username eq username) } //suspect this returns the total # of records deleted but need to confirm
         }
 

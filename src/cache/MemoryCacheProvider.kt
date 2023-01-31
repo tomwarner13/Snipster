@@ -1,6 +1,8 @@
 package snipster.cache
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.Duration
 
 class MemoryCacheProvider : CacheProvider {
@@ -16,6 +18,15 @@ class MemoryCacheProvider : CacheProvider {
         val result = cache.get(key) { loader() } as T
 
         if(result != null) return result
+
+        //should never be null because loader() should set the object
+        throw IllegalStateException("Unable to access cache object!")
+    }
+
+    override suspend fun <T : Any> getOrFetchObjectAsync(key: String, loader: () -> T): T = withContext(Dispatchers.IO) {
+        val result = cache.get(key) { loader() } as T
+
+        if(result != null) return@withContext result
 
         //should never be null because loader() should set the object
         throw IllegalStateException("Unable to access cache object!")

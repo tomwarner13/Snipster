@@ -5,6 +5,8 @@ import snipster.schema.UserSettingsDc
 import snipster.schema.UserSettingsTable
 import snipster.server.SnipServer
 import io.ktor.application.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.sql.BooleanColumnType
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.VarCharColumnType
@@ -15,25 +17,20 @@ import org.kodein.di.ktor.di
 import org.slf4j.Logger
 import java.sql.PreparedStatement
 
-class UserSettingsRepository(private val application: Application) {
-    private val _conn by di{application}.instance<DatabaseConnection>()
-    private val _server by di{application}.instance<SnipServer>()
-    private val _db : Database = _conn.db
-    private val _logger by di{application}.instance<Logger>()
-
-    fun getUserSettings(username: String) : UserSettingsDc {
-        return transaction {
+class UserSettingsRepository(private val application: Application) : DatabaseBase(application) {
+    suspend fun getUserSettings(username: String) : UserSettingsDc {
+        return dbExec {
             var result = UserSettings.find { UserSettingsTable.username eq username }.firstOrNull()
             if(result != null) {
-                return@transaction result.toDc()
+                return@dbExec result.toDc()
             } else {
-                return@transaction UserSettingsDc(username)
+                return@dbExec UserSettingsDc(username)
             }
         }
     }
 
-    fun saveUserSettings(settings: UserSettingsDc) {
-        transaction {
+    suspend fun saveUserSettings(settings: UserSettingsDc) {
+        dbUpdate {
             val conn = TransactionManager.current().connection
 
             val query =

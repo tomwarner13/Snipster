@@ -39,7 +39,7 @@ fun Application.setupRoutes() = routing {
         return if (appConfig.envType == EnvType.Local) "$title (LOCAL)" else title;
     }
 
-    fun getSnipsForUser(di: LazyDI, username: String?) : Map<Int, SnipDc> {
+    suspend fun getSnipsForUser(di: LazyDI, username: String?) : Map<Int, SnipDc> {
         if(username == null) return emptyMap()
 
         val repository by di.instance<SnipRepository>()
@@ -123,7 +123,8 @@ fun Application.setupRoutes() = routing {
         val username = checkUsername(call)
         if(username != call.parameters["username"]) throw SecurityException("attempted to modify unowned snips!")
         log.debug("$username opening socket")
-        val session = SnipUserSession(username, this, this@setupRoutes)
+        val userSnips = snipRepo.getOwnedSnips(username)
+        val session = SnipUserSession(username, userSnips, this, this@setupRoutes)
         server.registerSession(session)
 
         try {
