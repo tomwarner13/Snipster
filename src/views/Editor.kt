@@ -7,6 +7,7 @@ import io.ktor.html.*
 import kotlinx.html.*
 import org.kodein.di.LazyDI
 import org.kodein.di.instance
+import snipster.schema.UserSettingsDc
 
 class Editor(private val snips: Map<Int, SnipDc>, username: String? = null) : Template<FlowContent> {
     private val isLoggedIn = username != null
@@ -119,10 +120,11 @@ class Editor(private val snips: Map<Int, SnipDc>, username: String? = null) : Te
 }
 
 
-fun HEAD.editorSpecificHeaders(snips: Map<Int, SnipDc>, username: String? = null) {
+fun HEAD.editorSpecificHeaders(snips: Map<Int, SnipDc>, settings: UserSettingsDc, username: String? = null) {
     val isLoggedIn = username != null
 
-    val snipsJson = "let snips = " + Gson().toJson(snips) + ";"
+    val snipsJson = "let snips = ${Gson().toJson(snips)};"
+    val settingsJson = "let settings = ${Gson().toJson(settings)};"
 
     val defaultContent = if (!isLoggedIn) """
     let defaultContent = "welcome!\n\nSnipster is a plaintext editor which supports multiple tabs (snips) and updates across all open browsers instantly. more info is available on the 'About' page, under the top menu.\n\nyou'll need to create an account to do that--it's free and does not require email verification. simply click 'Login' above and then 'Sign Up'\n\nyou can edit this document, and edits will persist in this browser until you clear your cache--if you want it to go back to default, click 'reset' above";
@@ -137,6 +139,7 @@ fun HEAD.editorSpecificHeaders(snips: Map<Int, SnipDc>, username: String? = null
                         let isLoggedIn = $isLoggedIn;
                         let username = "$username";
                         $defaultContent
+                        $settingsJson
                         $snipsJson
                     """)
         }

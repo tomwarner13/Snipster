@@ -19,12 +19,11 @@ const debounce = (callback, wait) => {
   };
 }
 
-function loadJar() {
+function loadJar(settings) {
     const editor = document.querySelector('#editor');
 
-    //make these dynamic and based off user/browser settings?
-    let jarOptions = { addClosing: false };
-    let loadLineNumbers = false;
+    let jarOptions = { addClosing: settings.insertClosing };
+    let loadLineNumbers = settings.useLineNumbers;
 
     if(loadLineNumbers) {
         jar = CodeJar(editor, withLineNumbers(Prism.highlightElement), jarOptions);
@@ -292,7 +291,7 @@ $(() => { //initialize components on document.ready
         snips = {"0": snip};
     }
 
-    loadJar();
+    loadJar(settings);
     if(!isLoggedIn) fixSignOnWidget();
     fixLineNumberTranslucence();
     updateEditorContents(snip.title, snip.content);

@@ -19,7 +19,10 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.launch
 import org.kodein.di.LazyDI
 import org.kodein.di.instance
 import org.kodein.di.ktor.di
@@ -46,12 +49,30 @@ fun Application.setupRoutes() = routing {
         return username.let { u -> repository.getSnipsByUser(u).map { it.id.value to it.toDc() }.toMap()}
     }
 
+    suspend fun getSettingsForUser(di: LazyDI, username: String?) : UserSettingsDc {
+        if(username == null) return UserSettingsDc("Guest")
+
+        val repo by di.instance<UserSettingsRepository>()
+        return repo.getUserSettings(username)
+    }
+
     get("/") {
-        val snips = getSnipsForUser(di, call.session?.username)
+        val dbCalls = async {
+            val snipTask = async { return@async getSnipsForUser(di, call.session?.username) }
+            val settingsTask = async { return@async getSettingsForUser(di, call.session?.username) }
+
+            val snipResult = snipTask.await()
+            val settingsResult = settingsTask.await()
+
+            return@async Pair(snipResult, settingsResult)
+        }
+
+        val (snips, settings) = dbCalls.await()
+
 
         call.respondHtmlTemplate(PageTemplate(appConfig, buildPageHeader("Snipster"), call.session?.username, call.session?.displayName)) {
             headerContent {
-                editorSpecificHeaders(snips, call.session?.username)
+                editorSpecificHeaders(snips, settings, call.session?.username)
             }
             pageContent {
                 insert(Editor(snips, call.session?.username)) {}
