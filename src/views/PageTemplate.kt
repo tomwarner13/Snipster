@@ -16,10 +16,6 @@ class PageTemplate(private val pageHeader: String, username: String? = null) : T
             title { +pageHeader }
             styleLink("https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css")
             styleLink("/fa/css/all.css")
-            if(!isLoggedIn) {
-                styleLink("https://global.oktacdn.com/okta-signin-widget/5.5.1/css/okta-sign-in.min.css")
-                script(src = "https://global.oktacdn.com/okta-signin-widget/5.5.1/js/okta-sign-in.min.js") {}
-            }
             script(src = "https://code.jquery.com/jquery-3.5.1.min.js") {
                 attributes["integrity"] = "sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
                 attributes["crossorigin"] = "anonymous"

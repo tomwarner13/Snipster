@@ -11,7 +11,7 @@ import snipster.config.AppConfig
 import snipster.config.OktaConfig
 import snipster.schema.UserSettingsDc
 
-class Editor(private val snips: Map<Int, SnipDc>, private val appConfig: AppConfig, username: String? = null) : Template<FlowContent> {
+class Editor(private val snips: Map<Int, SnipDc>, private val appConfig: AppConfig, private val settings: UserSettingsDc, username: String? = null) : Template<FlowContent> {
     private val isLoggedIn = username != null
     private val oktaConfig = appConfig.oktaConfig
 
@@ -137,11 +137,25 @@ class Editor(private val snips: Map<Int, SnipDc>, private val appConfig: AppConf
                             div("modal-body") {
                                 div {
                                     id = "userSettingsForm"
-                                    input(InputType.checkBox, classes="form-check-label") {
-                                        id="addClosingBox"
-                                        value=""
-                                        label {  }
-
+                                    p() {
+                                        input(InputType.checkBox, classes = "form-check-label") {
+                                            id = "addClosingBox"
+                                            checked = settings.insertClosing
+                                        }
+                                        label {
+                                            attributes["for"] = "addClosingBox"
+                                            +"Automatically add closing quotes when typing?"
+                                        }
+                                    }
+                                    p() {
+                                        input(InputType.checkBox, classes = "form-check-label") {
+                                            id = "useLineNumbersBox"
+                                            checked = settings.useLineNumbers
+                                        }
+                                        label {
+                                            attributes["for"] = "useLineNumbersBox"
+                                            +"Use line numbers? (also disables word wrap)"
+                                        }
                                     }
                                     //known settings so far:
                                     //  addClosing on ', default to off, bool
@@ -227,6 +241,10 @@ fun HEAD.editorSpecificHeaders(snips: Map<Int, SnipDc>, settings: UserSettingsDc
 
     script(type="module", src = "/js/prism.js") {}
     script(type="module", src = "/js/scratchpad.js") {}
+    if(!isLoggedIn) {
+        styleLink("https://global.oktacdn.com/okta-signin-widget/5.5.1/css/okta-sign-in.min.css")
+        script(src = "https://global.oktacdn.com/okta-signin-widget/5.5.1/js/okta-sign-in.min.js") {}
+    }
     script {
         unsafe {
             raw("""

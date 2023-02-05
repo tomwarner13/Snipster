@@ -73,10 +73,10 @@ fun Application.setupRoutes() = routing {
                 editorSpecificHeaders(snips, settings, call.session?.username)
             }
             navBarContent {
-                EditorSpecificNavbarTemplate(call.session?.username != null, call.session?.displayName)
+                insert(EditorSpecificNavbarTemplate(call.session?.username != null, call.session?.displayName)) {}
             }
             pageContent {
-                insert(Editor(snips, appConfig, call.session?.username)) {}
+                insert(Editor(snips, appConfig, settings, call.session?.username)) {}
             }
         }
     }
