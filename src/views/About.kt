@@ -1,10 +1,13 @@
 package snipster.views
 
+import com.google.gson.Gson
 import io.ktor.html.*
 import kotlinx.html.*
+import snipster.schema.UserSettingsDc
 
-class About : Template<FlowContent> {
+class About(private val settings: UserSettingsDc?) : Template<FlowContent> {
     override fun FlowContent.apply() {
+        // TODO UPDATE THIS ALL LOL
         div("container px-0") {
             div("row justify-content-center") {
                 div("col col-lg-8") {
@@ -26,6 +29,14 @@ class About : Template<FlowContent> {
                         +"If you insist! My Venmo link is @Tom-Warner-1, you can PayPal me through the email posted on my "
                         a("https://github.com/tomwarner13") { +"Github" }
                         +", or you can email it directly for alternative arrangements (crypto etc). Patreon is coming soon!"
+                    }
+                }
+            }
+            if(settings != null) {
+                val settingsJson = "let settings = ${Gson().toJson(settings)};"
+                script {
+                    unsafe {
+                        raw("$settingsJson")
                     }
                 }
             }

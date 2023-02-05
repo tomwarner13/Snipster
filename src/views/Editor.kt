@@ -7,113 +7,207 @@ import io.ktor.html.*
 import kotlinx.html.*
 import org.kodein.di.LazyDI
 import org.kodein.di.instance
+import snipster.config.AppConfig
+import snipster.config.OktaConfig
 import snipster.schema.UserSettingsDc
 
-class Editor(private val snips: Map<Int, SnipDc>, username: String? = null) : Template<FlowContent> {
+class Editor(private val snips: Map<Int, SnipDc>, private val appConfig: AppConfig, username: String? = null) : Template<FlowContent> {
     private val isLoggedIn = username != null
+    private val oktaConfig = appConfig.oktaConfig
 
     override fun FlowContent.apply() {
-        div("container px-0") {
-            ul("nav nav-tabs") {
-                var firstSnip = true
-                snips.forEach {
-                    val activeClass = if (firstSnip) " active" else ""
-                    li("nav-item") {
-                        id = "snip-tab-${it.key}"
-                        button(classes = "nav-link snip-tab-btn$activeClass", type = ButtonType.button) {
-                            id = "snip-btn-${it.key}"
-                            attributes["data-bs-toggle"] = "tab"
-                            attributes["data-bs-target"] = "#"
-                            attributes["onclick"] = "loadActive(${it.key})"
-                            i("fas fa-sticky-note me-1")
-                            span {
-                                id = "snip-name-${it.key}"
-                                +it.value.title
+        div {
+            div("container px-0") {
+                ul("nav nav-tabs") {
+                    var firstSnip = true
+                    snips.forEach {
+                        val activeClass = if (firstSnip) " active" else ""
+                        li("nav-item") {
+                            id = "snip-tab-${it.key}"
+                            button(classes = "nav-link snip-tab-btn$activeClass", type = ButtonType.button) {
+                                id = "snip-btn-${it.key}"
+                                attributes["data-bs-toggle"] = "tab"
+                                attributes["data-bs-target"] = "#"
+                                attributes["onclick"] = "loadActive(${it.key})"
+                                i("fas fa-sticky-note me-1")
+                                span {
+                                    id = "snip-name-${it.key}"
+                                    +it.value.title
+                                }
+                            }
+                        }
+                        firstSnip = false
+                    }
+                    if (firstSnip) { //snips were empty, use default title for first tab
+                        li("nav-item") {
+                            button(classes = "nav-link snip-tab-btn active", type = ButtonType.button) {
+                                id = "default-tab"
+                                attributes["data-bs-toggle"] = "tab"
+                                attributes["data-bs-target"] = "#"
+                                i("fas fa-sticky-note me-1")
+                                span {
+                                    +"untitled"
+                                }
+                            }
+                        }
+                    } else {
+                        li("nav-item") {
+                            id = "create-new-tab"
+                            button(classes = "nav-link", type = ButtonType.button) {
+                                id = "create-new-btn"
+                                attributes["data-bs-toggle"] = "tab"
+                                attributes["data-bs-target"] = "#"
+                                onClick = "createNewSnip()"
+                                i("fas fa-plus")
                             }
                         }
                     }
-                    firstSnip = false
                 }
-                if(firstSnip) { //snips were empty, use default title for first tab
-                    li("nav-item") {
-                        button(classes = "nav-link snip-tab-btn active", type = ButtonType.button) {
-                            id = "default-tab"
-                            attributes["data-bs-toggle"] = "tab"
-                            attributes["data-bs-target"] = "#"
-                            i("fas fa-sticky-note me-1")
-                            span {
-                                +"untitled"
+                nav("navbar border") {
+                    div("nav") {
+                        val disableClass = if (isLoggedIn) "" else " disabled"
+                        val buttonClasses = "nav-link btn-outline mx-2 control-btn$disableClass"
+                        val controlClasses = "$buttonClasses control-element"
+                        val renameClasses = "$buttonClasses control-hidden rename-element"
+                        val deleteClasses = "$buttonClasses control-hidden delete-element"
+                        button(classes = controlClasses) {
+                            id = "rename-snip-btn"
+                            attributes["onclick"] = "renameDialog()"
+                            +"Rename"
+                            i("fas fa-edit")
+                        }
+                        button(classes = controlClasses) {
+                            id = "delete-snip-btn"
+                            attributes["onclick"] = "deleteDialog()"
+                            +"Delete"
+                            i("fas fa-trash")
+                        }
+                        input(InputType.text, classes = renameClasses) {
+                            id = "rename-snip-input"
+                        }
+                        button(classes = renameClasses) {
+                            id = "rename-snip-confirm-btn"
+                            attributes["onclick"] = "renameSnip()"
+                            +"Confirm"
+                            i("fas fa-check")
+                        }
+                        button(classes = renameClasses) {
+                            id = "rename-snip-cancel-btn"
+                            attributes["onclick"] = "resetControls()"
+                            +"Cancel"
+                            i("fas fa-times")
+                        }
+                        span("$deleteClasses me-5") {
+                            id = "delete-snip-confirm-message"
+                            +"Really delete forever?"
+                        }
+                        button(classes = "$deleteClasses ms-5") {
+                            id = "delete-snip-confirm-btn"
+                            attributes["onclick"] = "deleteSnip()"
+                            +"Confirm"
+                            i("fas fa-check")
+                        }
+                        button(classes = deleteClasses) {
+                            id = "delete-snip-cancel-btn"
+                            attributes["onclick"] = "resetControls()"
+                            +"Cancel"
+                            i("fas fa-times")
+                        }
+                    }
+                }
+                pre {
+                    id = "editor"
+                    code("col-lg-8 col-xs-12 container px-0 code language-markdown")
+                }
+            }
+            if(isLoggedIn) {
+                div("modal fade") {
+                    id = "settingsModal"
+                    div("modal-dialog") {
+                        div("modal-content") {
+                            div("modal-header") {
+                                h5("modal-title") {
+                                    i("fas fa-user-cog me-1")
+                                    +"User Settings"
+                                }
+                                button(classes = "btn-close", type = ButtonType.button) {
+                                    attributes["data-bs-dismiss"] = "modal"
+                                }
+                            }
+                            div("modal-body") {
+                                div {
+                                    id = "userSettingsForm"
+                                    input(InputType.checkBox, classes="form-check-label") {
+                                        id="addClosingBox"
+                                        value=""
+                                        label {  }
+
+                                    }
+                                    //known settings so far:
+                                    //  addClosing on ', default to off, bool
+                                    //  line numbers vs word wrap, some kind of toggle
+                                    //  theme and syntax highlighting eventually but that may not be at the user level
+                                }
                             }
                         }
                     }
-                } else {
-                    li("nav-item") {
-                        id = "create-new-tab"
-                        button(classes = "nav-link", type = ButtonType.button) {
-                            id = "create-new-btn"
-                            attributes["data-bs-toggle"] = "tab"
-                            attributes["data-bs-target"] = "#"
-                            onClick = "createNewSnip()"
-                            i("fas fa-plus")
+                }
+            } else {
+                div("modal fade") {
+                    id = "loginModal"
+                    div("modal-dialog") {
+                        div("modal-content") {
+                            div("modal-header") {
+                                h5("modal-title") {
+                                    +"Login or Sign Up"
+                                }
+                                button(classes = "btn-close", type = ButtonType.button) {
+                                    attributes["data-bs-dismiss"] = "modal"
+                                }
+                            }
+                            div("modal-body") {
+                                div {
+                                    id = "oktaLoginContainer"
+                                }
+                            }
                         }
                     }
                 }
-            }
-            nav("navbar border") {
-                div("nav") {
-                    val disableClass = if (isLoggedIn) "" else " disabled"
-                    val buttonClasses = "nav-link btn-outline mx-2 control-btn$disableClass"
-                    val controlClasses = "$buttonClasses control-element"
-                    val renameClasses = "$buttonClasses control-hidden rename-element"
-                    val deleteClasses = "$buttonClasses control-hidden delete-element"
-                    button(classes = controlClasses) {
-                        id = "rename-snip-btn"
-                        attributes["onclick"] = "renameDialog()"
-                        +"Rename"
-                        i("fas fa-edit")
-                    }
-                    button(classes = controlClasses) {
-                        id = "delete-snip-btn"
-                        attributes["onclick"] = "deleteDialog()"
-                        +"Delete"
-                        i("fas fa-trash")
-                    }
-                    input(InputType.text, classes = renameClasses) {
-                        id = "rename-snip-input"
-                    }
-                    button(classes = renameClasses) {
-                        id = "rename-snip-confirm-btn"
-                        attributes["onclick"] = "renameSnip()"
-                        +"Confirm"
-                        i("fas fa-check")
-                    }
-                    button(classes = renameClasses) {
-                        id = "rename-snip-cancel-btn"
-                        attributes["onclick"] = "resetControls()"
-                        +"Cancel"
-                        i("fas fa-times")
-                    }
-                    span("$deleteClasses me-5") {
-                        id = "delete-snip-confirm-message"
-                        +"Really delete forever?"
-                    }
-                    button(classes = "$deleteClasses ms-5") {
-                        id = "delete-snip-confirm-btn"
-                        attributes["onclick"] = "deleteSnip()"
-                        +"Confirm"
-                        i("fas fa-check")
-                    }
-                    button(classes = deleteClasses) {
-                        id = "delete-snip-cancel-btn"
-                        attributes["onclick"] = "resetControls()"
-                        +"Cancel"
-                        i("fas fa-times")
+                script {
+                    unsafe {
+                        raw("""
+                            let signIn = new OktaSignIn({
+                                baseUrl: '${oktaConfig.oktaHost}',
+                                el: '#oktaLoginContainer',
+                                clientId: '${oktaConfig.clientId}',
+                                redirectUri: '${appConfig.host}/login/authorization-callback',
+                                authParams: {
+                                  scopes: ['openid', 'email', 'profile'],
+                                  issuer: '${oktaConfig.orgUrl}',
+                                  pkce: false,
+                                  responseType: 'code',
+                                  nonce: null
+                                },
+                                features: {
+                                  registration: true,
+                                  rememberMe: true
+                                },
+                                i18n: {
+                                  'en': {
+                                    'primaryauth.username.placeholder': 'Email Address',
+                                    'primaryauth.username.tooltip': 'Your email address is your username.'
+                                  }
+                                }
+                              }
+                            );
+                            
+                            signIn.showSignInAndRedirect()
+                            .catch((e) => {
+                              console.log("sign in error! " + e);
+                            });
+                        """.trimIndent())
                     }
                 }
-            }
-            pre {
-                id = "editor"
-                code("col-lg-8 col-xs-12 container px-0 code language-markdown")
             }
         }
     }
@@ -150,4 +244,37 @@ fun HEAD.editorSpecificHeaders(snips: Map<Int, SnipDc>, settings: UserSettingsDc
             raw(".control-hidden { display: none }")
         }
     } //TODO move to common stylesheet?
+}
+
+class EditorSpecificNavbarTemplate(private val isLoggedIn: Boolean, private val displayName: String?) : Template<FlowContent> {
+    override fun FlowContent.apply() {
+        div("navbar-nav flex-row") {
+            span("connection-lost-container") {
+                attributes["title"] = "Connection lost!"
+                i("fas fa-unlink text-danger")
+            }
+            if (isLoggedIn) {
+                a(classes = "nav-link mx-2") {
+                    attributes["data-bs-toggle"] = "modal"
+                    attributes["data-bs-target"] = "#settingsModal"
+                    i("fas fa-user-cog text-light me-1")
+                    +"Hello, $displayName"
+                }
+                a(href = "/logout", classes = "nav-link mx-2") {
+                    +"Logout"
+                }
+            } else {
+                div("navbar-text mx-2") {
+                    +"Hello, Guest"
+                }
+                div("navbar-item") {
+                    button(classes = "btn btn-secondary", type = ButtonType.button) {
+                        attributes["data-bs-toggle"] = "modal"
+                        attributes["data-bs-target"] = "#loginModal"
+                        +"Login"
+                    }
+                }
+            }
+        }
+    }
 }

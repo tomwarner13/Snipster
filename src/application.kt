@@ -55,14 +55,14 @@ fun Application.module() {
     //automatic responses on error status
     install(StatusPages) {
         status(HttpStatusCode.NotFound) {
-            call.respondHtmlTemplate(PageTemplate(appConfig, "Page Not Found", call.session?.username, call.session?.displayName)) {
+            call.respondHtmlTemplate(PageTemplate( "Page Not Found", call.session?.username)) {
                 pageContent {
                     insert(NotFound(call.request.path())) {}
                 }
             }
         }
         status(HttpStatusCode.InternalServerError) {
-            call.respondHtmlTemplate(PageTemplate(appConfig,"Server Error", call.session?.username, call.session?.displayName)) {
+            call.respondHtmlTemplate(PageTemplate("Server Error", call.session?.username)) {
                 val status = call.response.status() ?: HttpStatusCode.InternalServerError
                 pageContent {
                     insert(ServerError(call.request.path(), status)) {}

@@ -20,9 +20,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.launch
 import org.kodein.di.LazyDI
 import org.kodein.di.instance
 import org.kodein.di.ktor.di
@@ -39,14 +37,14 @@ fun Application.setupRoutes() = routing {
     }
 
     fun buildPageHeader(title: String) : String {
-        return if (appConfig.envType == EnvType.Local) "$title (LOCAL)" else title;
+        return if (appConfig.envType == EnvType.Local) "$title (LOCAL)" else title
     }
 
     suspend fun getSnipsForUser(di: LazyDI, username: String?) : Map<Int, SnipDc> {
         if(username == null) return emptyMap()
 
         val repository by di.instance<SnipRepository>()
-        return username.let { u -> repository.getSnipsByUser(u).map { it.id.value to it.toDc() }.toMap()}
+        return username.let { u -> repository.getSnipsByUser(u).associate { it.id.value to it.toDc() } }
     }
 
     suspend fun getSettingsForUser(di: LazyDI, username: String?) : UserSettingsDc {
@@ -58,8 +56,8 @@ fun Application.setupRoutes() = routing {
 
     get("/") {
         val dbCalls = async {
-            val snipTask = async { return@async getSnipsForUser(di, call.session?.username) }
-            val settingsTask = async { return@async getSettingsForUser(di, call.session?.username) }
+            val snipTask = async { getSnipsForUser(di, call.session?.username) }
+            val settingsTask = async { getSettingsForUser(di, call.session?.username) }
 
             val snipResult = snipTask.await()
             val settingsResult = settingsTask.await()
@@ -70,20 +68,25 @@ fun Application.setupRoutes() = routing {
         val (snips, settings) = dbCalls.await()
 
 
-        call.respondHtmlTemplate(PageTemplate(appConfig, buildPageHeader("Snipster"), call.session?.username, call.session?.displayName)) {
+        call.respondHtmlTemplate(PageTemplate(buildPageHeader("Snipster"), call.session?.username)) {
             headerContent {
                 editorSpecificHeaders(snips, settings, call.session?.username)
             }
+            navBarContent {
+                EditorSpecificNavbarTemplate(call.session?.username != null, call.session?.displayName)
+            }
             pageContent {
-                insert(Editor(snips, call.session?.username)) {}
+                insert(Editor(snips, appConfig, call.session?.username)) {}
             }
         }
     }
 
     get("/about") {
-        call.respondHtmlTemplate(PageTemplate(appConfig, buildPageHeader("About Snipster"), call.session?.username, call.session?.displayName)) {
+        val settings = if (call.session?.username == null) null else getSettingsForUser(di, call.session?.username)
+
+        call.respondHtmlTemplate(PageTemplate(buildPageHeader("About Snipster"), call.session?.username)) {
             pageContent {
-                insert(About()) {}
+                insert(About(settings)) {}
             }
         }
     }
@@ -106,13 +109,6 @@ fun Application.setupRoutes() = routing {
         if(settings.username != username) throw SecurityException("Cannot modify settings for another user")
         val result = settingsRepo.saveUserSettings(settings)
         call.respond(HttpStatusCode.Accepted, result)
-    }
-
-    get("/settings/update") {
-        val username = checkUsername(call)
-        var settings = UserSettingsDc(username, true, false)
-        val result = settingsRepo.saveUserSettings(settings)
-        call.respond(HttpStatusCode.NoContent)
     }
 
     post("/snips") {

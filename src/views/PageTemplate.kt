@@ -4,12 +4,12 @@ import snipster.config.AppConfig
 import io.ktor.html.*
 import kotlinx.html.*
 
-class PageTemplate(private val appConfig: AppConfig, private val pageHeader: String, username: String? = null, private val displayName: String? = null) : Template<HTML> {
+class PageTemplate(private val pageHeader: String, username: String? = null) : Template<HTML> {
     private val isLoggedIn = username != null
-    private val oktaConfig = appConfig.oktaConfig
 
     val headerContent = Placeholder<HEAD>()
     val pageContent = Placeholder<FlowContent>()
+    val navBarContent = Placeholder<FlowContent>()
 
     override fun HTML.apply() {
         head {
@@ -65,130 +65,12 @@ class PageTemplate(private val appConfig: AppConfig, private val pageHeader: Str
                                 }
                             }
                         }
-                        div("navbar-nav flex-row") {
-                            span("connection-lost-container") {
-                                attributes["title"] = "Connection lost!"
-                                i("fas fa-unlink text-danger")
-                            }
-                            if (isLoggedIn) {
-                                a(classes = "nav-link mx-2") {
-                                    attributes["data-bs-toggle"] = "modal"
-                                    attributes["data-bs-target"] = "#settingsModal"
-                                    i("fas fa-user-cog text-light me-1")
-                                    +"Hello, $displayName"
-                                }
-                                a(href = "/logout", classes = "nav-link mx-2") {
-                                    +"Logout"
-                                }
-                            } else {
-                                div("navbar-text mx-2") {
-                                    +"Hello, Guest"
-                                }
-                                div("navbar-item") {
-                                    button(classes = "btn btn-secondary", type = ButtonType.button) {
-                                        attributes["data-bs-toggle"] = "modal"
-                                        attributes["data-bs-target"] = "#loginModal"
-                                        +"Login"
-                                    }
-                                }
-                            }
-                        }
+                        insert(navBarContent)
                     }
                 }
             }
             main("mt-3") {
                 insert(pageContent)
-                if(isLoggedIn) {
-                    div("modal fade") {
-                        id = "settingsModal"
-                        div("modal-dialog") {
-                            div("modal-content") {
-                                div("modal-header") {
-                                    h5("modal-title") {
-                                        i("fas fa-user-cog me-1")
-                                        +"User Settings"
-                                    }
-                                    button(classes = "btn-close", type = ButtonType.button) {
-                                        attributes["data-bs-dismiss"] = "modal"
-                                    }
-                                }
-                                div("modal-body") {
-                                    div {
-                                        id = "userSettingsForm"
-                                        //known settings so far:
-                                        //  addClosing on ', default to off, bool
-                                        //  line numbers vs word wrap, some kind of toggle
-                                        //  anything else?
-
-                                        //this will need:
-                                        //  a DB table with username as key
-                                        //  a fetch method to load the DB table
-                                        //  some way to communicate with the table and push change events -- use the socket?
-                                        //  theme and syntax highlighting eventually but that may not be at the user level
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    div("modal fade") {
-                        id = "loginModal"
-                        div("modal-dialog") {
-                            div("modal-content") {
-                                div("modal-header") {
-                                    h5("modal-title") {
-                                        +"Login or Sign Up"
-                                    }
-                                    button(classes = "btn-close", type = ButtonType.button) {
-                                        attributes["data-bs-dismiss"] = "modal"
-                                    }
-                                }
-                                div("modal-body") {
-                                    div {
-                                        id = "oktaLoginContainer"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if(!isLoggedIn) {
-                script {
-                    unsafe {
-                        raw("""
-                            let signIn = new OktaSignIn({
-                                baseUrl: '${oktaConfig.oktaHost}',
-                                el: '#oktaLoginContainer',
-                                clientId: '${oktaConfig.clientId}',
-                                redirectUri: '${appConfig.host}/login/authorization-callback',
-                                authParams: {
-                                  scopes: ['openid', 'email', 'profile'],
-                                  issuer: '${oktaConfig.orgUrl}',
-                                  pkce: false,
-                                  responseType: 'code',
-                                  nonce: null
-                                },
-                                features: {
-                                  registration: true,
-                                  rememberMe: true
-                                },
-                                i18n: {
-                                  'en': {
-                                    'primaryauth.username.placeholder': 'Email Address',
-                                    'primaryauth.username.tooltip': 'Your email address is your username.'
-                                  }
-                                }
-                              }
-                            );
-                            
-                            signIn.showSignInAndRedirect()
-                            .catch((e) => {
-                              console.log("sign in error! " + e);
-                            });
-                        """.trimIndent())
-                    }
-                }
             }
         }
     }

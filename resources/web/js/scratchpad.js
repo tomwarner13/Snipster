@@ -5,6 +5,7 @@ let changesQueued = false;
 let closeAction = () => { };
 let shouldClickToNewTab = false;
 let jar = {};
+let currentSettings = settings;
 
 import {CodeJar} from 'https://cdn.jsdelivr.net/npm/codejar@3.4.0/codejar.min.js';
 import {withLineNumbers} from 'https://cdn.jsdelivr.net/npm/codejar@3.4.0/linenumbers.js';
@@ -19,14 +20,15 @@ const debounce = (callback, wait) => {
   };
 }
 
-function loadJar(settings) {
+function loadJar() {
     const editor = document.querySelector('#editor');
 
-    let jarOptions = { addClosing: settings.insertClosing };
-    let loadLineNumbers = settings.useLineNumbers;
+    let jarOptions = { addClosing: currentSettings.insertClosing };
+    let loadLineNumbers = currentSettings.useLineNumbers;
 
     if(loadLineNumbers) {
         jar = CodeJar(editor, withLineNumbers(Prism.highlightElement), jarOptions);
+        fixLineNumberTranslucence();
     } else {
         jar = CodeJar(editor, Prism.highlightElement, jarOptions);
     }
@@ -38,6 +40,25 @@ function loadJar(settings) {
             editSnipDebounced();
         }
     });
+}
+
+function updateSettings(newSettings) {
+    if(newSettings.insertClosing === currentSettings.insertClosing && newSettings.useLineNumbers === currentSettings.useLineNumbers) {
+        //nothing has changed
+        return;
+    }
+
+    if(newSettings.useLineNumbers === currentSettings.useLineNumbers) {
+        //only insertClosing has changed, update the editor options
+        jar.updateOptions({ insertClosing: newSettings.insertClosing});
+        currentSettings = newSettings;
+        return;
+    }
+
+    //otherwise, line number setting has changed, so we have to rebuild the editor
+    currentSettings = newSettings;
+    jar.destroy();
+    loadJar();
 }
 
 function onUpdate(data) {
@@ -291,9 +312,8 @@ $(() => { //initialize components on document.ready
         snips = {"0": snip};
     }
 
-    loadJar(settings);
+    loadJar();
     if(!isLoggedIn) fixSignOnWidget();
-    fixLineNumberTranslucence();
     updateEditorContents(snip.title, snip.content);
     initializeKeyListeners();
 });
@@ -306,3 +326,4 @@ window.deleteDialog = deleteDialog;
 window.renameSnip = renameSnip;
 window.resetControls = resetControls;
 window.deleteSnip = deleteSnip;
+window.updateSettings = updateSettings;
