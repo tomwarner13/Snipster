@@ -74,14 +74,7 @@ function updateSettings(newSettings) {
         return;
     }
 
-    if(newSettings.useLineNumbers === currentSettings.useLineNumbers) {
-        //only insertClosing has changed, update the editor options
-        jar.updateOptions({ insertClosing: newSettings.insertClosing});
-        currentSettings = newSettings;
-        return;
-    }
-
-    //otherwise, line number setting has changed, so we have to rebuild the editor
+    //otherwise, we have to rebuild the editor (live reload is advertised as a feature but does not appear to work)
     currentSettings = newSettings;
     jar.destroy();
     loadJar();
