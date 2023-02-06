@@ -137,7 +137,7 @@ class Editor(private val snips: Map<Int, SnipDc>, private val appConfig: AppConf
                             div("modal-body") {
                                 div {
                                     id = "userSettingsForm"
-                                    p() {
+                                    p {
                                         input(InputType.checkBox, classes = "form-check-label") {
                                             id = "addClosingBox"
                                             checked = settings.insertClosing
@@ -147,7 +147,7 @@ class Editor(private val snips: Map<Int, SnipDc>, private val appConfig: AppConf
                                             +"Automatically add closing quotes when typing?"
                                         }
                                     }
-                                    p() {
+                                    p {
                                         input(InputType.checkBox, classes = "form-check-label") {
                                             id = "useLineNumbersBox"
                                             checked = settings.useLineNumbers
@@ -155,6 +155,14 @@ class Editor(private val snips: Map<Int, SnipDc>, private val appConfig: AppConf
                                         label {
                                             attributes["for"] = "useLineNumbersBox"
                                             +"Use line numbers? (also disables word wrap)"
+                                        }
+                                    }
+                                    p {
+                                        button(classes = "nav-link btn-outline mx-2") {
+                                            id = "save-user-settings-btn"
+                                            attributes["onclick"] = "saveSettings()"
+                                            +"Save"
+                                            i("fas fa-check")
                                         }
                                     }
                                     //known settings so far:

@@ -42,6 +42,32 @@ function loadJar() {
     });
 }
 
+function saveSettings() {
+    let insertClosing = $('#addClosingBox').prop('checked');
+    let useLineNumbers = $('#useLineNumbersBox').prop('checked');
+    if(insertClosing === currentSettings.insertClosing && useLineNumbers === currentSettings.useLineNumbers) {
+        $('#settingsModal').modal('hide');
+        return;
+    }
+
+    let newSettings = { username, insertClosing, useLineNumbers };
+
+    fetch('/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newSettings)
+    })
+    .then(_ => {
+        updateSettings(newSettings);
+        $('#settingsModal').modal('hide');
+    })
+    .catch(e => {
+        console.log("save settings failed! " + e); //TODO this
+    });
+}
+
 function updateSettings(newSettings) {
     if(newSettings.insertClosing === currentSettings.insertClosing && newSettings.useLineNumbers === currentSettings.useLineNumbers) {
         //nothing has changed
@@ -326,4 +352,4 @@ window.deleteDialog = deleteDialog;
 window.renameSnip = renameSnip;
 window.resetControls = resetControls;
 window.deleteSnip = deleteSnip;
-window.updateSettings = updateSettings;
+window.saveSettings = saveSettings;
