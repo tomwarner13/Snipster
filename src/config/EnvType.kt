@@ -1,4 +1,4 @@
-package com.okta.demo.ktor.config
+package snipster.config
 
 enum class EnvType {
     Live,

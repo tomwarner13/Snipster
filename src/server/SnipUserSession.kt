@@ -1,11 +1,11 @@
-package com.okta.demo.ktor.server
+package snipster.server
 
 import com.google.gson.Gson
-import com.okta.demo.ktor.database.SnipRepository
-import com.okta.demo.ktor.helper.SnipChangeEvent
-import com.okta.demo.ktor.schema.ChangeType
-import com.okta.demo.ktor.schema.ClientMessage
-import com.okta.demo.ktor.schema.SnipDc
+import snipster.database.SnipRepository
+import snipster.helper.SnipChangeEvent
+import snipster.schema.ChangeType
+import snipster.schema.ClientMessage
+import snipster.schema.SnipDc
 import io.ktor.application.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.*
@@ -19,7 +19,7 @@ import java.beans.PropertyChangeListener
 import java.util.*
 
 //TODO track list of open snips per user session here
-class SnipUserSession(val username: String, private val session: WebSocketServerSession, private val application: Application)
+class SnipUserSession(val username: String, private val userSnips: MutableSet<Int>, private val session: WebSocketServerSession, private val application: Application)
     : PropertyChangeListener {
 
     private val log by di{application}.instance<Logger>()
@@ -27,7 +27,6 @@ class SnipUserSession(val username: String, private val session: WebSocketServer
 
     val sessionId = UUID.randomUUID().toString()
 
-    private val userSnips : MutableSet<Int> = _repo.getOwnedSnips(username) //what if this changes? notify through property listeners? or always check cache?
     private val otherSnips : MutableSet<Int> = emptyList<Int>().toMutableSet()
 
     override fun propertyChange(evt: PropertyChangeEvent?) {

@@ -5,6 +5,7 @@ let changesQueued = false;
 let closeAction = () => { };
 let shouldClickToNewTab = false;
 let jar = {};
+let currentSettings = settings;
 
 import {CodeJar} from 'https://cdn.jsdelivr.net/npm/codejar@3.4.0/codejar.min.js';
 import {withLineNumbers} from 'https://cdn.jsdelivr.net/npm/codejar@3.4.0/linenumbers.js';
@@ -21,7 +22,17 @@ const debounce = (callback, wait) => {
 
 function loadJar() {
     const editor = document.querySelector('#editor');
-    jar = CodeJar(editor, withLineNumbers(Prism.highlightElement));
+
+    let jarOptions = { addClosing: currentSettings.insertClosing };
+    let loadLineNumbers = currentSettings.useLineNumbers;
+
+    if(loadLineNumbers) {
+        jar = CodeJar(editor, withLineNumbers(Prism.highlightElement), jarOptions);
+        fixLineNumberTranslucence();
+    } else {
+        jar = CodeJar(editor, Prism.highlightElement, jarOptions);
+    }
+
     jar.onUpdate((data) => {
         //check if content has actually changed before firing anything
         if(snip.content !== data) {
@@ -29,6 +40,51 @@ function loadJar() {
             editSnipDebounced();
         }
     });
+}
+
+function saveSettings() {
+    let insertClosing = $('#addClosingBox').prop('checked');
+    let useLineNumbers = $('#useLineNumbersBox').prop('checked');
+    if(insertClosing === currentSettings.insertClosing && useLineNumbers === currentSettings.useLineNumbers) {
+        $('#settingsModal').modal('hide');
+        return;
+    }
+
+    let newSettings = { username, insertClosing, useLineNumbers };
+
+    fetch('/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newSettings)
+    })
+    .then(_ => {
+        updateSettings(newSettings);
+        $('#settingsModal').modal('hide');
+    })
+    .catch(e => {
+        console.log("save settings failed! " + e); //TODO this
+    });
+}
+
+function updateSettings(newSettings) {
+    if(newSettings.insertClosing === currentSettings.insertClosing && newSettings.useLineNumbers === currentSettings.useLineNumbers) {
+        //nothing has changed
+        return;
+    }
+
+    //otherwise, we have to rebuild the editor (live reload is advertised as a feature but does not appear to work)
+    currentSettings = newSettings;
+    jar.destroy();
+    $('#editor').empty();
+    $('#editor').removeAttr("style");
+    if(!currentSettings.useLineNumbers) {
+        //for some reason, rebuilding the jar does not remove the lineNumbers element and that needs to go manually
+        $('.codejar-linenumbers').remove();
+    }
+    loadJar();
+    updateEditorContents(snip.title, snip.content);
 }
 
 function onUpdate(data) {
@@ -284,7 +340,6 @@ $(() => { //initialize components on document.ready
 
     loadJar();
     if(!isLoggedIn) fixSignOnWidget();
-    fixLineNumberTranslucence();
     updateEditorContents(snip.title, snip.content);
     initializeKeyListeners();
 });
@@ -297,3 +352,4 @@ window.deleteDialog = deleteDialog;
 window.renameSnip = renameSnip;
 window.resetControls = resetControls;
 window.deleteSnip = deleteSnip;
+window.saveSettings = saveSettings;

@@ -1,7 +1,7 @@
-package com.okta.demo.ktor
+package snipster
 
-import com.okta.demo.ktor.config.AppConfig
-import com.okta.demo.ktor.schema.UserSession
+import snipster.config.AppConfig
+import snipster.schema.UserSession
 import com.okta.jwt.JwtVerifiers
 import io.ktor.application.*
 import io.ktor.auth.*

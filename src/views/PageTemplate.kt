@@ -1,25 +1,21 @@
-package com.okta.demo.ktor.views
+package snipster.views
 
-import com.okta.demo.ktor.config.AppConfig
+import snipster.config.AppConfig
 import io.ktor.html.*
 import kotlinx.html.*
 
-class PageTemplate(private val appConfig: AppConfig, private val pageHeader: String, private val username: String? = null, private val displayName: String? = null) : Template<HTML> {
+class PageTemplate(private val pageHeader: String, username: String? = null) : Template<HTML> {
     private val isLoggedIn = username != null
-    private val oktaConfig = appConfig.oktaConfig
 
     val headerContent = Placeholder<HEAD>()
     val pageContent = Placeholder<FlowContent>()
+    val navBarContent = Placeholder<FlowContent>()
 
     override fun HTML.apply() {
         head {
             title { +pageHeader }
             styleLink("https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css")
             styleLink("/fa/css/all.css")
-            if(!isLoggedIn) {
-                styleLink("https://global.oktacdn.com/okta-signin-widget/5.5.1/css/okta-sign-in.min.css")
-                script(src = "https://global.oktacdn.com/okta-signin-widget/5.5.1/js/okta-sign-in.min.js") {}
-            }
             script(src = "https://code.jquery.com/jquery-3.5.1.min.js") {
                 attributes["integrity"] = "sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
                 attributes["crossorigin"] = "anonymous"
@@ -65,95 +61,12 @@ class PageTemplate(private val appConfig: AppConfig, private val pageHeader: Str
                                 }
                             }
                         }
-                        div("navbar-nav flex-row") {
-                            span("connection-lost-container") {
-                                attributes["title"] = "Connection lost!"
-                                i("fas fa-unlink text-danger")
-                            }
-                            if (isLoggedIn) {
-                                a(href = "#", classes = "nav-link mx-2") { //TODO can this link to settings for the user? or just remove the <a>
-                                    +"Hello, $displayName"
-                                }
-                                a(href = "/logout", classes = "nav-link mx-2") {
-                                    +"Logout"
-                                }
-                            } else {
-                                div("navbar-text mx-2") {
-                                    +"Hello, Guest"
-                                }
-                                div("navbar-item") {
-                                    button(classes = "btn btn-secondary", type = ButtonType.button) {
-                                        attributes["data-bs-toggle"] = "modal"
-                                        attributes["data-bs-target"] = "#loginModal"
-                                        +"Login"
-                                    }
-                                }
-                            }
-                        }
+                        insert(navBarContent)
                     }
                 }
             }
             main("mt-3") {
                 insert(pageContent)
-                if(!isLoggedIn) {
-                    div("modal fade") {
-                        id = "loginModal"
-                        div("modal-dialog") {
-                            div("modal-content") {
-                                div("modal-header") {
-                                    h5("modal-title") {
-                                        +"Login or Sign Up"
-                                    }
-                                    button(classes = "btn-close", type = ButtonType.button) {
-                                        attributes["data-bs-dismiss"] = "modal"
-                                    }
-                                }
-                                div("modal-body") {
-                                    div {
-                                        id = "oktaLoginContainer"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if(!isLoggedIn) {
-                script {
-                    unsafe {
-                        raw("""
-                            let signIn = new OktaSignIn({
-                                baseUrl: '${oktaConfig.oktaHost}',
-                                el: '#oktaLoginContainer',
-                                clientId: '${oktaConfig.clientId}',
-                                redirectUri: '${appConfig.host}/login/authorization-callback',
-                                authParams: {
-                                  scopes: ['openid', 'email', 'profile'],
-                                  issuer: '${oktaConfig.orgUrl}',
-                                  pkce: false,
-                                  responseType: 'code',
-                                  nonce: null
-                                },
-                                features: {
-                                  registration: true,
-                                  rememberMe: true
-                                },
-                                i18n: {
-                                  'en': {
-                                    'primaryauth.username.placeholder': 'Email Address',
-                                    'primaryauth.username.tooltip': 'Your email address is your username.'
-                                  }
-                                }
-                              }
-                            );
-                            
-                            signIn.showSignInAndRedirect()
-                            .catch((e) => {
-                              console.log("sign in error! " + e);
-                            });
-                        """.trimIndent())
-                    }
-                }
             }
         }
     }

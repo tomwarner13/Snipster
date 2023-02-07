@@ -1,4 +1,4 @@
-package com.okta.demo.ktor.schema
+package snipster.schema
 
 enum class ChangeType {
     Created,

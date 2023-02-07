@@ -1,5 +1,5 @@
-package com.okta.demo.ktor.config
-import com.okta.demo.ktor.config.OktaConfig.Companion.oktaConfigReader
+package snipster.config
+import snipster.config.OktaConfig.Companion.oktaConfigReader
 import com.typesafe.config.Config
 
 data class AppConfig(

@@ -1,4 +1,4 @@
-package com.okta.demo.ktor.config
+package snipster.config
 
 data class SessionEncryptionConfig(
     val encryptionKey: String,

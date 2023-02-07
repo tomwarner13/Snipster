@@ -1,6 +1,6 @@
-package com.okta.demo.ktor.helper
+package snipster.helper
 
-import com.okta.demo.ktor.schema.ChangeType
+import snipster.schema.ChangeType
 
 class SnipChangeEvent (
     val id: Int,

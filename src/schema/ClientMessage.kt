@@ -1,4 +1,4 @@
-package com.okta.demo.ktor.schema
+package snipster.schema
 
 data class ClientMessage (
     val changetype: ChangeType,

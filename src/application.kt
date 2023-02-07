@@ -1,17 +1,18 @@
-package com.okta.demo.ktor
+package snipster
 
-import com.okta.demo.ktor.cache.CacheProvider
-import com.okta.demo.ktor.cache.MemoryCacheProvider
-import com.okta.demo.ktor.config.AppConfig
-import com.okta.demo.ktor.config.EnvType
-import com.okta.demo.ktor.database.ConnectionSettings
-import com.okta.demo.ktor.database.DatabaseConnection
-import com.okta.demo.ktor.database.SnipRepository
-import com.okta.demo.ktor.schema.UserSession
-import com.okta.demo.ktor.server.SnipServer
-import com.okta.demo.ktor.views.NotFound
-import com.okta.demo.ktor.views.PageTemplate
-import com.okta.demo.ktor.views.ServerError
+import snipster.cache.CacheProvider
+import snipster.cache.MemoryCacheProvider
+import snipster.config.AppConfig
+import snipster.config.EnvType
+import snipster.database.ConnectionSettings
+import snipster.database.DatabaseConnection
+import snipster.database.SnipRepository
+import snipster.database.UserSettingsRepository
+import snipster.schema.UserSession
+import snipster.server.SnipServer
+import snipster.views.NotFound
+import snipster.views.PageTemplate
+import snipster.views.ServerError
 import com.typesafe.config.ConfigFactory
 import io.ktor.application.*
 import io.ktor.features.*
@@ -54,14 +55,14 @@ fun Application.module() {
     //automatic responses on error status
     install(StatusPages) {
         status(HttpStatusCode.NotFound) {
-            call.respondHtmlTemplate(PageTemplate(appConfig, "Page Not Found", call.session?.username, call.session?.displayName)) {
+            call.respondHtmlTemplate(PageTemplate( "Page Not Found", call.session?.username)) {
                 pageContent {
                     insert(NotFound(call.request.path())) {}
                 }
             }
         }
         status(HttpStatusCode.InternalServerError) {
-            call.respondHtmlTemplate(PageTemplate(appConfig,"Server Error", call.session?.username, call.session?.displayName)) {
+            call.respondHtmlTemplate(PageTemplate("Server Error", call.session?.username)) {
                 val status = call.response.status() ?: HttpStatusCode.InternalServerError
                 pageContent {
                     insert(ServerError(call.request.path(), status)) {}
@@ -95,6 +96,7 @@ fun Application.module() {
     di {
         bind<DatabaseConnection>() with singleton { conn }
         bind<SnipRepository>() with singleton { SnipRepository(this@module) }
+        bind<UserSettingsRepository>() with singleton { UserSettingsRepository(this@module) }
         bind<Logger>() with singleton { this@module.log }
         bind<SnipServer>() with singleton { SnipServer() }
         bind<CacheProvider>() with singleton { MemoryCacheProvider() }

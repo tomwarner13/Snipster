@@ -1,8 +1,8 @@
-package com.okta.demo.ktor.server
+package snipster.server
 
-import com.okta.demo.ktor.helper.SnipChangeEvent
-import com.okta.demo.ktor.schema.ChangeType
-import com.okta.demo.ktor.schema.SnipDc
+import snipster.helper.SnipChangeEvent
+import snipster.schema.ChangeType
+import snipster.schema.SnipDc
 import java.beans.PropertyChangeSupport
 
 class SnipServer {

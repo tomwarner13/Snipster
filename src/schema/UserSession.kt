@@ -1,4 +1,4 @@
-package com.okta.demo.ktor.schema
+package snipster.schema
 
 //add name values here? id by first name?
 data class UserSession(
