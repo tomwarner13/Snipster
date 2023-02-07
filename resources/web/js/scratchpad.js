@@ -77,7 +77,14 @@ function updateSettings(newSettings) {
     //otherwise, we have to rebuild the editor (live reload is advertised as a feature but does not appear to work)
     currentSettings = newSettings;
     jar.destroy();
+    $('#editor').empty();
+    $('#editor').removeAttr("style");
+    if(!currentSettings.useLineNumbers) {
+        //for some reason, rebuilding the jar does not remove the lineNumbers element and that needs to go manually
+        $('.codejar-linenumbers').remove();
+    }
     loadJar();
+    updateEditorContents(snip.title, snip.content);
 }
 
 function onUpdate(data) {
