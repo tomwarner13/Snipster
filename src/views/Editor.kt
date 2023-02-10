@@ -267,7 +267,11 @@ fun HEAD.editorSpecificHeaders(snips: Map<Int, SnipDc>, settings: UserSettingsDc
     styleLink("/css/prism.css")
     style {
         unsafe {
-            raw(".control-hidden { display: none }")
+            raw(".control-hidden { display: none }\n" +
+                    ".connection-lost-container { display: none; padding: .5rem 1rem }\n" + //hides connection lost icon
+                    ".codejar-linenumbers { z-index: 2 }\n" + //prevents scrolled text from "hovering" above line numbers in editor
+                    "#editor { min-height: 400px }\n" //keeps the editor from shrinking to the size of the text when there's very little
+            )
         }
     } //TODO move to common stylesheet?
 }
