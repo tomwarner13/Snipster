@@ -212,7 +212,8 @@ class Editor(private val snips: Map<Int, SnipDc>, private val appConfig: AppConf
                                 },
                                 features: {
                                   registration: true,
-                                  rememberMe: true
+                                  rememberMe: true,
+                                  showPasswordToggleOnSignInPage: true
                                 },
                                 i18n: {
                                   'en': {
