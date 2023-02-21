@@ -33,6 +33,19 @@ class Editor(private val snips: Map<Int, SnipDc>, private val appConfig: AppConf
                                 span {
                                     id = "snip-name-${it.key}"
                                     +it.value.title
+                                    if(firstSnip) {
+                                        a("#", classes = "dropdown-toggle mx-1 default-link") {
+                                            attributes["data-bs-toggle"] = "dropdown"
+                                            role="button"
+                                        }
+                                        ul("dropdown-menu") {
+                                            li {
+                                                a("/about", classes="dropdown-item") {
+                                                    +"Test Control Button"
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -271,7 +284,10 @@ fun HEAD.editorSpecificHeaders(snips: Map<Int, SnipDc>, settings: UserSettingsDc
             raw(".control-hidden { display: none }\n" +
                     ".connection-lost-container { display: none; padding: .5rem 1rem }\n" + //hides connection lost icon
                     ".codejar-linenumbers { z-index: 2 }\n" + //prevents scrolled text from "hovering" above line numbers in editor
-                    "#editor { min-height: 400px }\n" //keeps the editor from shrinking to the size of the text when there's very little
+                    "#editor { min-height: 400px }\n" + //keeps the editor from shrinking to the size of the text when there's very little
+                    ".default-link { color: inherit; text-decoration: inherit; }\n" + //these all prevent the lil action dropdown from
+                    ".default-link:link { color: inherit; text-decoration: inherit; }\n" + //looking like a link (aka being blue)
+                    ".default-link:hover { color: inherit; text-decoration: inherit; }\n"
             )
         }
     } //TODO move to common stylesheet?
